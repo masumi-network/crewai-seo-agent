@@ -1,0 +1,136 @@
+data_collection_task:
+  description: >
+    WEBSITE BEING ANALYZED: {website_url}
+
+    Analyze and collect SPECIFIC metrics using the tools:
+
+    1. Using SeleniumScraper, collect and count:
+       - Meta tags and their types
+       - Total number of headings (h1-h6) with their distribution
+       - Exact keyword count and density percentages
+       - Total number of internal and external links
+       - Number of images and their alt text status
+       - List all unique URLs found
+       - Extract and list all meta descriptions
+
+    2. Using LoadingTimeTracker, measure:
+       - Exact page load times with millisecond precision
+       - Number of samples taken
+       - Performance variance
+
+    3. Using MobileOptimizationTool, analyze:
+       - Viewport meta tag presence
+       - Text readability (font sizes)
+       - Tap target spacing
+       - Responsive images
+       - Mobile compatibility score
+
+    IMPORTANT: Provide NUMERICAL data wherever possible. Do not make assumptions.
+
+  expected_output: >
+    ANALYSIS REPORT FOR: {website_url}
+
+    1. Meta Tags Analysis:
+       - Total number of meta tags: [X]
+       - Types found: [List each type with count]
+       - Meta description length: [X] characters
+    
+    2. Content Structure:
+       - H1 tags: [X]
+       - H2 tags: [X]
+       - H3 tags: [X]
+       - H4-H6 tags: [X]
+       - Total word count: [X]
+    
+    3. Link Analysis:
+       - Internal links: [X]
+       - External links: [X]
+       - Unique domains linked: [List]
+       - Broken links found: [X]
+    
+    4. Media Inventory:
+       - Total images: [X]
+       - Images with alt text: [X]
+       - Images without alt text: [X]
+    
+    5. Performance Metrics:
+       - Average load time: [X] ms
+       - Fastest load: [X] ms
+       - Slowest load: [X] ms
+       - Sample size: [X]
+
+    6. Mobile Optimization Metrics:
+       - Viewport Meta Tag: [Yes/No]
+       - Text Readability Score: [X]%
+       - Tap Target Spacing Score: [X]%
+       - Responsive Images Score: [X]%
+       - Overall Mobile Score: [X]%
+
+    Raw Data Summary:
+    [Include specific data points found during analysis]
+  agent: scraper_agent
+
+analysis_task:
+  description: >
+    ANALYZING WEBSITE: {website_url}
+
+    Based on the collected numerical data, analyze:
+    1. Technical Performance:
+       - Compare load times against industry standard (2.5s)
+       - Calculate mobile performance score
+       - Measure TTFB (Time to First Byte)
+    
+    2. Content Quality:
+       - Calculate keyword density percentages
+       - Measure heading structure completeness
+       - Analyze meta tag optimization percentage
+    
+    3. Link Profile:
+       - Calculate internal/external link ratio
+       - Measure link distribution
+       - Identify authority of linked domains
+  expected_output: >
+    SEO ANALYSIS REPORT FOR: {website_url}
+
+    1. Performance Scores:
+       - Load time percentile: [X]%
+       - Mobile optimization: [X]%
+       - Technical health: [X]%
+    
+    2. Content Metrics:
+       - Keyword density: [X]%
+       - Structure score: [X]%
+       - Meta optimization: [X]%
+    
+    3. Link Analysis:
+       - Internal/External ratio: [X]
+       - Distribution score: [X]%
+       - Domain authority range: [X-Y]
+  agent: analyse_agent
+
+optimization_task:
+  description: >
+    OPTIMIZATION PLAN FOR: {website_url}
+
+    Based on the statistical analysis, create an optimization plan with:
+    1. Priority Issues (List top 5 with metrics)
+    2. Expected Impact (Percentage improvements)
+    3. Implementation Timeline (With specific milestones)
+  expected_output: >
+    OPTIMIZATION RECOMMENDATIONS FOR: {website_url}
+
+    1. Priority Fixes:
+       - Issue 1: [Metric] -> [Target]
+       - Issue 2: [Metric] -> [Target]
+       etc.
+    
+    2. Impact Forecast:
+       - Load time reduction: [X]%
+       - SEO score increase: [X]%
+       - User engagement: [X]%
+    
+    3. Key Statistics:
+       - Average Load Time: [X]s
+       - Most Used Meta Tags: [List]
+       - Mobile Compatibility: [X]%
+  agent: optimization_agent

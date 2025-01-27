@@ -1,0 +1,20 @@
+[project]
+name = "seo-analyze-agent"
+version = "0.1.0"
+description = "SEO Analysis Agent using crewAI"
+authors = [{ name = "Keanu Klestil", email = "keanu" }]
+requires-python = ">=3.10,<=3.13"
+dependencies = [
+    "crewai[tools]>=0.79.4,<1.0.0"
+]
+
+[project.scripts]
+seo_analyze = "src.main:run"
+run_crew = "src.main:run"
+train = "src.main:train"
+replay = "src.main:replay"
+test = "src.main:test"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
