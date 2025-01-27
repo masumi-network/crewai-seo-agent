@@ -37,10 +37,9 @@ class MobileOptimizationTool(BaseTool):
             url = 'https://' + url
 
         try:
-            # Setup Chrome options for mobile emulation
+            # Update mobile emulation settings
             mobile_emulation = {
-                "deviceMetrics": { "width": 375, "height": 812, "pixelRatio": 3.0 },
-                "userAgent": "Mozilla/5.0 (iPhone; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Mobile/15E148 Safari/604.1"
+                "deviceName": "iPhone X"  # Use predefined device instead of custom metrics
             }
             
             options = webdriver.ChromeOptions()
@@ -48,9 +47,13 @@ class MobileOptimizationTool(BaseTool):
             options.add_argument('--headless')
             options.add_argument('--no-sandbox')
             options.add_argument('--disable-dev-shm-usage')
-
-            # Initialize the driver
-            driver = webdriver.Chrome(options=options)
+            options.add_argument('--disable-gpu')  # Add this
+            options.add_argument('--ignore-certificate-errors')  # Add this
+            
+            # Initialize driver with service object
+            service = webdriver.ChromeService()
+            driver = webdriver.Chrome(service=service, options=options)
+            
             driver.get(url)
 
             try:

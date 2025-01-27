@@ -133,4 +133,5 @@ optimization_task:
        - Average Load Time: [X]s
        - Most Used Meta Tags: [List]
        - Mobile Compatibility: [X]%
+       - Most Frequent Words: [List top 10 with count]
   agent: optimization_agent

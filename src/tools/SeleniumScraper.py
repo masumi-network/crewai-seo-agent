@@ -7,6 +7,8 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
 from bs4 import BeautifulSoup
+from collections import Counter
+import re
 
 class SeleniumScraperInput(BaseModel):
     """Input for SeleniumScraper"""
@@ -30,14 +32,21 @@ class SeleniumScraper(BaseTool):
 
     def _run(self, website_url: str, css_element: str = "body", wait_time: int = 5, cookie: Optional[Dict] = None) -> str:
         try:
-            # Setup Chrome options
+            # Update Chrome options
             options = webdriver.ChromeOptions()
             options.add_argument('--headless')
             options.add_argument('--no-sandbox')
             options.add_argument('--disable-dev-shm-usage')
+            options.add_argument('--disable-gpu')
+            options.add_argument('--ignore-certificate-errors')
+            options.add_argument('--disable-extensions')
+            
+            # Add user agent
+            options.add_argument('--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.212 Safari/537.36')
 
-            # Initialize the driver
-            driver = webdriver.Chrome(options=options)
+            # Initialize the driver with a service object
+            service = webdriver.ChromeService()
+            driver = webdriver.Chrome(service=service, options=options)
             
             # Set cookie if provided
             if cookie:
@@ -56,6 +65,23 @@ class SeleniumScraper(BaseTool):
                 # Get the page source after JavaScript execution
                 page_source = driver.page_source
                 soup = BeautifulSoup(page_source, 'html.parser')
+                
+                # Get all text content for word frequency analysis
+                text_content = soup.get_text()
+                # Clean and tokenize the text
+                words = re.findall(r'\b\w+\b', text_content.lower())
+                # Count word frequency
+                word_freq = Counter(words).most_common(10)
+                
+                # Count meta tag types and their frequency
+                meta_tags = soup.find_all('meta')
+                meta_types = []
+                for tag in meta_tags:
+                    if tag.get('name'):
+                        meta_types.append(tag.get('name'))
+                    elif tag.get('property'):
+                        meta_types.append(tag.get('property'))
+                meta_freq = Counter(meta_types).most_common()
                 
                 # Find all elements matching the CSS selector
                 elements = soup.select(css_element)
@@ -85,6 +111,15 @@ class SeleniumScraper(BaseTool):
                     
                     else:
                         results.append(element.text.strip())
+
+                # Add word frequency and meta tag frequency to results
+                results.append("\nMost Frequent Words:")
+                for word, count in word_freq:
+                    results.append(f"- {word}: {count} occurrences")
+                
+                results.append("\nMost Used Meta Tags:")
+                for meta_type, count in meta_freq:
+                    results.append(f"- {meta_type}: {count} occurrences")
 
                 return "\n".join(filter(None, results))
 
