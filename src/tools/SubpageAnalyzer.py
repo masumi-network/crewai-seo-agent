@@ -8,6 +8,7 @@ import xml.etree.ElementTree as ET
 from collections import defaultdict
 import re
 import time
+import os
 
 class SubpageAnalyzerInput(BaseModel):
     """Input parameters for subpage analysis"""
@@ -78,23 +79,39 @@ class SubpageAnalyzer(BaseTool):
             return []
 
     def _crawl_pages(self, base_url: str, max_pages: int) -> List[str]:
-        """Crawls website to find subpages"""
+        """Crawls website to find subpages using browserless"""
         found_pages = set()
         to_crawl = {base_url}
         crawled = set()
         
-        headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8'
-        }
+        browserless_api_key = os.getenv('BROWSERLESS_API_KEY')
+        scrape_url = f'https://chrome.browserless.io/content?token={browserless_api_key}'
         
         while to_crawl and len(found_pages) < max_pages:
             try:
                 url = to_crawl.pop()
                 if url in crawled:
                     continue
-                    
-                response = requests.get(url, headers=headers, timeout=10, verify=False)
+                
+                # Configure browserless request
+                payload = {
+                    'url': url,
+                    'gotoOptions': {
+                        'waitUntil': 'networkidle0',
+                        'timeout': 30000
+                    }
+                }
+                
+                response = requests.post(
+                    scrape_url,
+                    json=payload,
+                    headers={
+                        'Content-Type': 'application/json',
+                        'Cache-Control': 'no-cache'
+                    },
+                    timeout=45
+                )
+                
                 if response.status_code == 200:
                     soup = BeautifulSoup(response.text, 'html.parser')
                     
@@ -111,7 +128,7 @@ class SubpageAnalyzer(BaseTool):
                                 to_crawl.add(full_url)
                                 
                     crawled.add(url)
-                    time.sleep(0.5)  # Be nice to servers
+                    time.sleep(1)  # Be nice to servers
                     
             except Exception as e:
                 print(f"Error crawling {url}: {str(e)}")
@@ -130,64 +147,58 @@ class SubpageAnalyzer(BaseTool):
             return 0.0
 
     def _analyze_subpages(self, urls: List[str], min_content_length: int) -> List[Dict]:
-        """Analyzes each subpage for various metrics"""
+        """Analyzes each subpage using browserless"""
         analyzed_pages = []
-        headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
-        
-        if not urls:  # If no URLs found
-            return [{
-                'url': 'No subpages found',
-                'title': 'No title',
-                'content_length': 0,
-                'headings': 0,
-                'images': 0,
-                'internal_links': 0,
-                'external_links': 0,
-                'importance_score': 0
-            }]
+        browserless_api_key = os.getenv('BROWSERLESS_API_KEY')
+        scrape_url = f'https://chrome.browserless.io/content?token={browserless_api_key}'
         
         for url in urls:
             try:
-                response = requests.get(url, headers=headers, timeout=10, verify=False)
-                soup = BeautifulSoup(response.text, 'html.parser')
-                
-                # Extract main content
-                content = self._extract_main_content(soup)
-                if len(content) < min_content_length:
-                    continue
-                
-                # Calculate metrics
-                page_metrics = {
+                payload = {
                     'url': url,
-                    'title': soup.title.string if soup.title else 'No title',
-                    'content_length': len(content),
-                    'headings': len(soup.find_all(['h1', 'h2', 'h3'])),
-                    'images': len(soup.find_all('img')),
-                    'internal_links': len([l for l in soup.find_all('a', href=True) 
-                                        if not l['href'].startswith(('http', 'https'))]),
-                    'external_links': len([l for l in soup.find_all('a', href=True) 
-                                        if l['href'].startswith(('http', 'https'))]),
-                    'importance_score': 0  # Will be calculated later
+                    'gotoOptions': {
+                        'waitUntil': 'networkidle0',
+                        'timeout': 30000
+                    }
                 }
                 
-                # Calculate importance score
-                page_metrics['importance_score'] = self._calculate_importance(page_metrics)
+                response = requests.post(
+                    scrape_url,
+                    json=payload,
+                    headers={
+                        'Content-Type': 'application/json',
+                        'Cache-Control': 'no-cache'
+                    },
+                    timeout=45
+                )
                 
-                analyzed_pages.append(page_metrics)
+                if response.status_code == 200:
+                    soup = BeautifulSoup(response.text, 'html.parser')
+                    content = self._extract_main_content(soup)
+                    
+                    if len(content) < min_content_length:
+                        continue
+                    
+                    page_metrics = {
+                        'url': url,
+                        'title': soup.title.string if soup.title else 'No title',
+                        'content_length': len(content),
+                        'headings': len(soup.find_all(['h1', 'h2', 'h3'])),
+                        'images': len(soup.find_all('img')),
+                        'internal_links': len([l for l in soup.find_all('a', href=True) 
+                                            if not l['href'].startswith(('http', 'https'))]),
+                        'external_links': len([l for l in soup.find_all('a', href=True) 
+                                            if l['href'].startswith(('http', 'https'))]),
+                        'importance_score': 0
+                    }
+                    
+                    page_metrics['importance_score'] = self._calculate_importance(page_metrics)
+                    analyzed_pages.append(page_metrics)
                 
             except Exception as e:
                 continue
         
-        return analyzed_pages or [{  # Return default if no pages were successfully analyzed
-            'url': 'Analysis failed',
-            'title': 'No title',
-            'content_length': 0,
-            'headings': 0,
-            'images': 0,
-            'internal_links': 0,
-            'external_links': 0,
-            'importance_score': 0
-        }]
+        return analyzed_pages
 
     def _extract_main_content(self, soup: BeautifulSoup) -> str:
         """Extracts main content from page, excluding navigation, footer, etc."""

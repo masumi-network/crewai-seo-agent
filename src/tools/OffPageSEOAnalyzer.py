@@ -12,6 +12,7 @@ import time
 import re
 import urllib3
 from collections import Counter
+import os
 
 # Define the input schema for the tool using Pydantic
 class OffPageSEOInput(BaseModel):
@@ -71,34 +72,62 @@ class OffPageSEOAnalyzer(BaseTool):
         return brand_name.replace('-', ' ').replace('_', ' ').title()
 
     def _analyze_link_profile(self, url: str) -> Dict:
-        """Analyzes external link profile"""
+        """Analyzes external link profile using browserless"""
         try:
-            headers = {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+            browserless_api_key = os.getenv('BROWSERLESS_API_KEY')
+            scrape_url = f'https://chrome.browserless.io/content?token={browserless_api_key}'
+            
+            payload = {
+                'url': url,
+                'gotoOptions': {
+                    'waitUntil': 'networkidle0',
+                    'timeout': 30000
+                }
             }
-            urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
             
-            response = requests.get(url, headers=headers, timeout=10, verify=False)
-            soup = BeautifulSoup(response.text, 'html.parser')
+            response = requests.post(
+                scrape_url,
+                json=payload,
+                headers={
+                    'Content-Type': 'application/json',
+                    'Cache-Control': 'no-cache'
+                },
+                timeout=45
+            )
             
-            external_links = []
-            for link in soup.find_all('a', href=True):
-                href = link['href']
-                if href.startswith(('http://', 'https://')):
-                    external_links.append(urlparse(href).netloc)
-            
-            unique_domains = set(external_links)
+            if response.status_code == 200:
+                soup = BeautifulSoup(response.text, 'html.parser')
+                
+                external_links = []
+                for link in soup.find_all('a', href=True):
+                    href = link['href']
+                    if href.startswith(('http://', 'https://')):
+                        external_links.append(urlparse(href).netloc)
+                
+                unique_domains = set(external_links)
+                
+                return {
+                    'total_external_links': len(external_links),
+                    'unique_domains': len(unique_domains),
+                    'edu_links': sum(1 for d in unique_domains if '.edu' in d),
+                    'gov_links': sum(1 for d in unique_domains if '.gov' in d),
+                    'org_links': sum(1 for d in unique_domains if '.org' in d),
+                    'com_links': sum(1 for d in unique_domains if '.com' in d),
+                    'authority_score': self._calculate_authority_score(unique_domains)
+                }
             
             return {
-                'total_external_links': len(external_links),
-                'unique_domains': len(unique_domains),
-                'edu_links': sum(1 for d in unique_domains if '.edu' in d),
-                'gov_links': sum(1 for d in unique_domains if '.gov' in d),
-                'org_links': sum(1 for d in unique_domains if '.org' in d),
-                'com_links': sum(1 for d in unique_domains if '.com' in d),
-                'authority_score': self._calculate_authority_score(unique_domains)
+                'total_external_links': 0,
+                'unique_domains': 0,
+                'edu_links': 0,
+                'gov_links': 0,
+                'org_links': 0,
+                'com_links': 0,
+                'authority_score': 0
             }
-        except:
+            
+        except Exception as e:
+            print(f"Error analyzing link profile: {str(e)}")
             return {
                 'total_external_links': 0,
                 'unique_domains': 0,

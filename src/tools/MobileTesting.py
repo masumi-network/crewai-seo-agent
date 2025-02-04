@@ -1,3 +1,8 @@
+# Import required libraries:
+# - crewai.tools.BaseTool: Base class for creating custom tools
+# - selenium: For browser automation and testing
+# - pydantic: For data validation and settings management
+# - typing: For type hints
 from crewai.tools import BaseTool
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -8,13 +13,21 @@ from typing import Dict, Optional, Type
 from pydantic import BaseModel, Field
 from selenium.common.exceptions import TimeoutException
 
+# Define input schema for the mobile testing tool
 class MobileTestingInput(BaseModel):
-    """Input for MobileOptimizationTool"""
+    """Input schema requiring a URL to test"""
     url: str = Field(..., description="The URL to test for mobile optimization")
 
+# Main mobile optimization testing tool
 class MobileOptimizationTool(BaseTool):
-    """Tool for testing mobile optimization of websites"""
+    """Tool that tests websites for mobile-friendliness by checking:
+    - Viewport meta tag
+    - Text readability 
+    - Tap target sizes
+    - Responsive images
+    """
     
+    # Tool metadata
     name: str = Field(default="Mobile Optimization Tester", description="Name of the tool")
     description: str = Field(
         default="Tests website for mobile optimization including viewport, text readability, tap targets, and responsive images",
@@ -23,51 +36,59 @@ class MobileOptimizationTool(BaseTool):
     args_schema: Type[BaseModel] = Field(default=MobileTestingInput, description="Schema for the tool's arguments")
 
     def __init__(self):
+        """Initialize the tool"""
         super().__init__()
 
     def _run(self, url: str) -> str:
         """
-        Run the mobile optimization test
+        Main method that runs the mobile optimization tests
+        
         Args:
-            url: The URL to test
+            url: Website URL to test
+            
         Returns:
-            str: Analysis results
+            str: Detailed analysis report with scores and recommendations
         """
+        # Ensure URL has protocol
         if not url.startswith(('http://', 'https://')):
             url = 'https://' + url
 
         try:
-            # Update mobile emulation settings
+            # Configure Chrome to emulate iPhone X
             mobile_emulation = {
-                "deviceName": "iPhone X"  # Use predefined device instead of custom metrics
+                "deviceName": "iPhone X"
             }
             
+            # Set up Chrome options for headless testing
             options = webdriver.ChromeOptions()
             options.add_experimental_option("mobileEmulation", mobile_emulation)
-            options.add_argument('--headless')
-            options.add_argument('--no-sandbox')
-            options.add_argument('--disable-dev-shm-usage')
-            options.add_argument('--disable-gpu')  # Add this
-            options.add_argument('--ignore-certificate-errors')  # Add this
+            options.add_argument('--headless')  # Run in background
+            options.add_argument('--no-sandbox')  # Bypass OS security
+            options.add_argument('--disable-dev-shm-usage')  # Handle limited resources
+            options.add_argument('--disable-gpu')
+            options.add_argument('--ignore-certificate-errors')
             
-            # Initialize driver with service object
+            # Initialize Chrome driver
             service = webdriver.ChromeService()
             driver = webdriver.Chrome(service=service, options=options)
             
+            # Load the webpage
             driver.get(url)
 
             try:
-                # Wait for page to load
+                # Wait for page to load (max 10 seconds)
                 WebDriverWait(driver, 10).until(
                     EC.presence_of_element_located((By.TAG_NAME, "body"))
                 )
 
-                # Check viewport meta tag
+                # TEST 1: Check viewport meta tag
+                # This tag is crucial for proper mobile scaling
                 viewport_meta = driver.find_elements(By.CSS_SELECTOR, 'meta[name="viewport"]')
                 has_viewport = len(viewport_meta) > 0
                 viewport_score = 100 if has_viewport else 0
 
-                # Check text readability (font sizes)
+                # TEST 2: Check text readability
+                # Find text elements and check font sizes (should be >= 12px)
                 text_elements = driver.find_elements(By.CSS_SELECTOR, 'p, span, div, a')
                 small_text = 0
                 for element in text_elements:
@@ -79,7 +100,8 @@ class MobileOptimizationTool(BaseTool):
                         continue
                 text_score = 100 - (small_text / max(len(text_elements), 1) * 100)
 
-                # Check tap targets
+                # TEST 3: Check tap targets
+                # Interactive elements should be at least 44x44px
                 clickable_elements = driver.find_elements(By.CSS_SELECTOR, 'a, button, input, select, textarea')
                 small_targets = 0
                 for element in clickable_elements:
@@ -92,7 +114,8 @@ class MobileOptimizationTool(BaseTool):
                         continue
                 tap_target_score = 100 - (small_targets / max(len(clickable_elements), 1) * 100)
 
-                # Check responsive images
+                # TEST 4: Check responsive images
+                # Images should use srcset/sizes for responsiveness
                 images = driver.find_elements(By.TAG_NAME, 'img')
                 non_responsive = 0
                 for img in images:
@@ -100,9 +123,10 @@ class MobileOptimizationTool(BaseTool):
                         non_responsive += 1
                 image_score = 100 - (non_responsive / max(len(images), 1) * 100)
 
-                # Calculate overall score
+                # Calculate overall score (average of all tests)
                 overall_score = (viewport_score + text_score + tap_target_score + image_score) / 4
 
+                # Generate detailed report with scores and recommendations
                 return f"""
 Mobile Optimization Analysis:
 
@@ -132,11 +156,12 @@ Recommendations:
                 return f"Timeout while analyzing mobile optimization for {url}"
             
             finally:
+                # Always close the browser
                 driver.quit()
 
         except Exception as e:
             return f"Error analyzing mobile optimization for {url}: {str(e)}"
 
     async def _arun(self, url: str) -> Dict:
-        """Async implementation"""
+        """Async version - not implemented"""
         raise NotImplementedError("Async not implemented")

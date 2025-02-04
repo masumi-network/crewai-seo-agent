@@ -10,7 +10,6 @@ import openai
 import os
 import yaml
 from crewai_tools import ScrapeWebsiteTool, SeleniumScrapingTool
-from tools.SeleniumScraper import SeleniumScraper
 from tools.LoadingTimeTracker import LoadingTimeTracker
 from tools.MobileTesting import MobileOptimizationTool
 import markdown
@@ -24,6 +23,7 @@ from html.parser import HTMLParser
 from tools.OffPageSEOAnalyzer import OffPageSEOAnalyzer
 from tools.ReferringDomainAnalyzer import ReferringDomainAnalyzer
 from tools.SubpageAnalyzer import SubpageAnalyzer
+from tools.BrowserlessScraper import BrowserlessScraper
 
 # Load environment variables
 load_dotenv()
@@ -73,7 +73,7 @@ class SEOAnalyseCrew():
             goal=self.agents_config['scraper_agent']['goal'],
             backstory=self.agents_config['scraper_agent']['backstory'],
             tools=[
-                SeleniumScraper(),
+                BrowserlessScraper(),
                 LoadingTimeTracker(),
                 MobileOptimizationTool(),
                 OffPageSEOAnalyzer(),

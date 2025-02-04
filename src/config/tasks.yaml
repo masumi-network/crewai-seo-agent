@@ -212,3 +212,67 @@ optimization_task:
        - [Internal linking strategies]
 
   agent: optimization_agent
+
+technical_analysis:
+  description: >
+    Analyze the technical SEO aspects of {website_url} using the BrowserlessScraper tool.
+    
+    1. Collect and analyze:
+       - All meta tags and their content
+       - Heading structure (h1-h6)
+       - Internal and external links
+       - Image optimization (alt tags, dimensions)
+       - Content structure and readability
+    
+    2. Measure performance:
+       - Page load times
+       - Mobile optimization scores
+       - Technical SEO metrics
+    
+    3. Provide detailed metrics on:
+       - Meta tag coverage
+       - Content structure quality
+       - Link profile health
+       - Image optimization status
+       - Overall technical score
+
+content_analysis:
+  description: >
+    Analyze the content quality and SEO optimization of {website_url}.
+    
+    1. Using BrowserlessScraper, analyze:
+       - Keyword usage and density
+       - Content readability scores
+       - Content structure and formatting
+       - Media usage and optimization
+    
+    2. Using OffPageSEOAnalyzer, examine:
+       - External linking patterns
+       - Social media presence
+       - Brand visibility metrics
+    
+    3. Using ReferringDomainAnalyzer, check:
+       - Quality of referring domains
+       - Context of references
+       - Authority of sources
+
+optimization:
+  description: >
+    Based on the technical and content analysis of {website_url}, provide optimization recommendations.
+    
+    1. Using SubpageAnalyzer, identify:
+       - Top performing pages
+       - Pages needing improvement
+       - Content gaps
+       - Internal linking opportunities
+    
+    2. Create an action plan for:
+       - Technical improvements
+       - Content enhancements
+       - Link profile optimization
+       - User experience improvements
+    
+    3. Prioritize recommendations by:
+       - Impact potential
+       - Implementation effort
+       - Expected ROI
