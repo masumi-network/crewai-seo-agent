@@ -1,5 +1,5 @@
 from crewai.tools import BaseTool
-from typing import Type, Optional, Dict
+from typing import Type, Optional, Dict, Union
 from pydantic import BaseModel, Field
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -35,6 +35,11 @@ class SeleniumScraper(BaseTool):
 
     def _run(self, website_url: str, css_element: str = "body", wait_time: int = 5, cookie: Optional[Dict] = None) -> str:
         try:
+            # Clean up the URL
+            website_url = website_url.strip('"')
+            if not website_url.startswith(('http://', 'https://')):
+                website_url = 'https://' + website_url
+
             # Configure Chrome browser options for headless operation
             options = webdriver.ChromeOptions()
             options.add_argument('--headless')  # Run browser in background
@@ -63,8 +68,14 @@ class SeleniumScraper(BaseTool):
                 # Load the webpage
                 driver.get(website_url)
                 
+                # Add cookies if provided
+                if cookie and isinstance(cookie, dict):
+                    for name, value in cookie.items():
+                        driver.add_cookie({'name': name, 'value': value})
+                    driver.refresh()  # Refresh page with new cookies
+                
                 # Wait for the body element to be present
-                WebDriverWait(driver, 3).until(
+                WebDriverWait(driver, wait_time).until(
                     EC.presence_of_element_located((By.TAG_NAME, "body"))
                 )
                 
@@ -79,9 +90,7 @@ class SeleniumScraper(BaseTool):
                 meta_analysis = {}
                 for tag in meta_tags:
                     tag_type = tag.get('name', tag.get('property', 'other'))
-                    if tag_type not in meta_analysis:
-                        meta_analysis[tag_type] = 0
-                    meta_analysis[tag_type] += 1
+                    meta_analysis[tag_type] = meta_analysis.get(tag_type, 0) + 1
                 
                 results.append("=== Meta Tag Analysis ===")
                 for tag_type, count in meta_analysis.items():
@@ -106,7 +115,7 @@ class SeleniumScraper(BaseTool):
                         results.append(f"h{level}: {heading.text.strip()}")
                 
                 # Extract links with their text and href attributes
-                links = soup.find_all('a')
+                links = soup.find_all('a', href=True)
                 for link in links:
                     href = link.get('href', '')
                     text = link.text.strip()

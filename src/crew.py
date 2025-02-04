@@ -22,6 +22,8 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from html.parser import HTMLParser
 from tools.OffPageSEOAnalyzer import OffPageSEOAnalyzer
+from tools.ReferringDomainAnalyzer import ReferringDomainAnalyzer
+from tools.SubpageAnalyzer import SubpageAnalyzer
 
 # Load environment variables
 load_dotenv()
@@ -49,7 +51,7 @@ class SEOAnalyseCrew():
 
     # Configure GPT-4 with specific settings
     openai_llm = LLM(
-        model='gpt-4',  
+        model='gpt-4o',  
         api_key=os.getenv('OPENAI_API_KEY'),
         max_retries=3,
         request_timeout=60,
@@ -66,6 +68,8 @@ class SEOAnalyseCrew():
                 LoadingTimeTracker(),
                 MobileOptimizationTool(),
                 OffPageSEOAnalyzer(),
+                ReferringDomainAnalyzer(),
+                SubpageAnalyzer(),
             ],
             verbose=True,
             llm=self.openai_llm  
@@ -145,12 +149,7 @@ class SEOAnalyseCrew():
 
     def convert_to_pdf(self):
         """
-        Converts the markdown report to a formatted PDF file.
-        Handles the entire process of:
-        - Reading markdown
-        - Converting to HTML
-        - Formatting with styles
-        - Generating PDF with proper layout
+        Converts the markdown report to a clean, well-formatted PDF
         """
         try:
             # Clean up domain name for filename
@@ -168,62 +167,103 @@ class SEOAnalyseCrew():
             doc = SimpleDocTemplate(
                 pdf_filename,
                 pagesize=letter,
-                rightMargin=72,
-                leftMargin=72,
-                topMargin=72,
-                bottomMargin=72
+                rightMargin=50,  # Reduced margins
+                leftMargin=50,
+                topMargin=50,
+                bottomMargin=50
             )
             
-            # Define document styles
+            # Define document styles with better spacing
             styles = getSampleStyleSheet()
+            
+            # Title style
             styles.add(ParagraphStyle(
                 name='CustomTitle',
                 parent=styles['Title'],
-                fontSize=24,
-                spaceAfter=30
+                fontSize=20,  # Smaller title
+                spaceAfter=30,
+                spaceBefore=20,
+                alignment=1  # Center alignment
             ))
+            
+            # Main heading style
             styles.add(ParagraphStyle(
                 name='CustomHeading1',
                 parent=styles['Heading1'],
-                fontSize=18,
-                spaceAfter=16
+                fontSize=16,  # Smaller heading
+                spaceAfter=16,
+                spaceBefore=20,
+                textColor=colors.HexColor('#2C3E50')  # Dark blue color
             ))
+            
+            # Subheading style
             styles.add(ParagraphStyle(
                 name='CustomHeading2',
                 parent=styles['Heading2'],
-                fontSize=16,
-                spaceAfter=14
+                fontSize=14,  # Smaller subheading
+                spaceAfter=12,
+                spaceBefore=15,
+                textColor=colors.HexColor('#34495E')  # Lighter blue color
             ))
+            
+            # Body text style
             styles.add(ParagraphStyle(
                 name='CustomBody',
                 parent=styles['Normal'],
-                fontSize=11,
-                spaceAfter=12
+                fontSize=10,  # Smaller body text
+                spaceAfter=8,
+                spaceBefore=8,
+                leading=14  # Line spacing
+            ))
+            
+            # List item style
+            styles.add(ParagraphStyle(
+                name='CustomListItem',
+                parent=styles['Normal'],
+                fontSize=10,
+                spaceAfter=3,
+                spaceBefore=3,
+                leftIndent=20,
+                leading=14
             ))
             
             # Build document content
             story = []
-            story.append(Paragraph(f"SEO Analysis Report - {domain}", styles['CustomTitle']))
-            story.append(Spacer(1, 12))
+            
+            # Add title
+            story.append(Paragraph(f"SEO Analysis Report", styles['CustomTitle']))
+            story.append(Paragraph(f"Domain: {domain}", styles['CustomHeading2']))
+            story.append(Spacer(1, 20))
             
             # Process each line and apply appropriate styling
             lines = html_content.split('\n')
+            in_list = False
+            
             for line in lines:
                 line = line.strip()
                 if not line:
+                    if in_list:
+                        story.append(Spacer(1, 8))
+                    else:
+                        story.append(Spacer(1, 12))
                     continue
-                    
+                
                 if line.startswith('<h1>'):
+                    in_list = False
                     text = self.strip_tags(line)
                     story.append(Paragraph(text, styles['CustomHeading1']))
                 elif line.startswith('<h2>'):
+                    in_list = False
                     text = self.strip_tags(line)
                     story.append(Paragraph(text, styles['CustomHeading2']))
+                elif line.startswith('- ') or line.startswith('* '):
+                    in_list = True
+                    text = self.strip_tags(line)
+                    story.append(Paragraph(text, styles['CustomListItem']))
                 else:
+                    in_list = False
                     text = self.strip_tags(line)
                     story.append(Paragraph(text, styles['CustomBody']))
-                
-                story.append(Spacer(1, 6))
             
             # Generate final PDF
             doc.build(story)

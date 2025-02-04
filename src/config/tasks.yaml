@@ -5,84 +5,46 @@ data_collection_task:
     Analyze and collect SPECIFIC metrics using the tools:
 
     1. Using SeleniumScraper, collect and count:
-       - Meta tags and their types
-       - Total number of headings (h1-h6) with their distribution
-       - Exact keyword count and density percentages
-       - Total number of internal and external links
-       - Number of images and their alt text status
-       - List all unique URLs found
-       - Extract and list all meta descriptions
+       - Meta tags and their types with descriptions
+       - Heading structure and content hierarchy
+       - Keyword usage and semantic relationships
+       - Internal/external link patterns
+       - Image optimization status
+       - Page structure and content organization
 
     2. Using LoadingTimeTracker, measure:
-       - Exact page load times with millisecond precision
-       - Number of samples taken
-       - Performance variance
+       - Page load time distribution
+       - Performance bottlenecks
+       - Resource loading patterns
 
     3. Using MobileOptimizationTool, analyze:
-       - Viewport meta tag presence
-       - Text readability (font sizes)
-       - Tap target spacing
-       - Responsive images
-       - Mobile compatibility score
+       - Responsive design implementation
+       - Mobile-specific features
+       - Touch target compliance
+       - Content adaptation
 
-    4. Using OffPageSEOAnalyzer, analyze:
-       - Backlink profile and metrics
-       - Social media presence and engagement
-       - Brand mentions and sentiment
-       - Domain authority indicators
+    4. Using OffPageSEOAnalyzer, examine:
+       - Link profile quality and diversity
+       - Social media engagement patterns
+       - Brand visibility metrics
+       - Content distribution effectiveness
 
-    IMPORTANT: Provide NUMERICAL data wherever possible. Do not make assumptions.
+    5. Using ReferringDomainAnalyzer, analyze:
+       - Referring domain quality
+       - Reference context and relevance
+       - Authority patterns
+       - Industry relationships
+
+    6. Using SubpageAnalyzer, evaluate:
+       - Content hierarchy
+       - Internal linking structure
+       - Page importance distribution
+       - Content quality metrics
+
+    IMPORTANT: Provide NUMERICAL data and specific URLs wherever possible.
 
   expected_output: >
-    ANALYSIS REPORT FOR: {website_url}
-
-    1. Meta Tags Analysis:
-       - Total number of meta tags: [X]
-       - Most used meta tags:
-         * [tag_type]: [count] occurrences
-         * [tag_type]: [count] occurrences
-         ...
-    
-    2. Content Analysis:
-       - Most frequent words:
-         * [word]: [count] occurrences
-         * [word]: [count] occurrences
-         ...
-       - Word density percentages
-    
-    3. Content Structure:
-       - H1 tags: [X]
-       - H2 tags: [X]
-       - H3 tags: [X]
-       - H4-H6 tags: [X]
-       - Total word count: [X]
-    
-    4. Link Analysis:
-       - Internal links: [X]
-       - External links: [X]
-       - Unique domains linked: [List]
-       - Broken links found: [X]
-    
-    5. Media Inventory:
-       - Total images: [X]
-       - Images with alt text: [X]
-       - Images without alt text: [X]
-    
-    6. Performance Metrics:
-       - Average load time: [X] ms
-       - Fastest load: [X] ms
-       - Slowest load: [X] ms
-       - Sample size: [X]
-
-    7. Mobile Optimization Metrics:
-       - Viewport Meta Tag: [Yes/No]
-       - Text Readability Score: [X]%
-       - Tap Target Spacing Score: [X]%
-       - Responsive Images Score: [X]%
-       - Overall Mobile Score: [X]%
-
-    Raw Data Summary:
-    [Include specific data points found during analysis]
+    [Detailed output format with specific metrics and URLs]
   agent: scraper_agent
 
 analysis_task:
@@ -104,6 +66,12 @@ analysis_task:
        - Calculate internal/external link ratio
        - Measure link distribution
        - Identify authority of linked domains
+
+    4. Page Importance:
+       - Evaluate content depth
+       - Analyze user engagement signals
+       - Calculate page authority scores
+
   expected_output: >
     SEO ANALYSIS REPORT FOR: {website_url}
 
@@ -121,6 +89,12 @@ analysis_task:
        - Internal/External ratio: [X]
        - Distribution score: [X]%
        - Domain authority range: [X-Y]
+
+    Page Authority Analysis:
+    - Content depth score: [X]%
+    - Engagement potential: [X]%
+    - Overall authority: [X]%
+
   agent: analyse_agent
 
 optimization_task:
@@ -131,6 +105,12 @@ optimization_task:
     1. Priority Issues (List top 5 with metrics)
     2. Expected Impact (Percentage improvements)
     3. Implementation Timeline (With specific milestones)
+
+    4. Page-Specific Recommendations:
+       - Content enhancement suggestions
+       - Structure improvements
+       - Link optimization strategies
+
   expected_output: >
     OPTIMIZATION RECOMMENDATIONS FOR: {website_url}
 
@@ -149,4 +129,15 @@ optimization_task:
        - Most Used Meta Tags: [List]
        - Mobile Compatibility: [X]%
        - Most Frequent Words: [List top 10 with count]
+
+    Page-Specific Optimizations:
+    1. High-Priority Pages:
+       - [URL]: [Specific recommendations]
+    2. Content Gaps:
+       - [Identified gaps]
+       - [Improvement suggestions]
+    3. Structure Enhancements:
+       - [Navigation improvements]
+       - [Internal linking strategies]
+
   agent: optimization_agent
