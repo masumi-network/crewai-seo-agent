@@ -31,13 +31,7 @@ data_collection_task:
        - Brand presence indicators
        - Content distribution
 
-    5. Using ReferringDomainAnalyzer, analyze:
-       - Referring websites
-       - Reference context
-       - Domain categories
-       - Reference strength
-
-    6. Using SubpageAnalyzer, analyze:
+    5. Using SubpageAnalyzer, analyze:
        - Top performing pages
        - Content quality metrics
        - Internal link structure

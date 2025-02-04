@@ -21,7 +21,6 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from html.parser import HTMLParser
 from tools.OffPageSEOAnalyzer import OffPageSEOAnalyzer
-from tools.ReferringDomainAnalyzer import ReferringDomainAnalyzer
 from tools.SubpageAnalyzer import SubpageAnalyzer
 from tools.BrowserlessScraper import BrowserlessScraper
 
@@ -77,7 +76,6 @@ class SEOAnalyseCrew():
                 LoadingTimeTracker(),
                 MobileOptimizationTool(),
                 OffPageSEOAnalyzer(),
-                ReferringDomainAnalyzer(),
                 SubpageAnalyzer(),
             ],
             verbose=True,
