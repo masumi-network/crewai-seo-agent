@@ -9,14 +9,17 @@ from selenium.common.exceptions import TimeoutException
 from bs4 import BeautifulSoup
 from collections import Counter
 import re
+import time
 
+# This class defines the expected input parameters for the scraper
 class SeleniumScraperInput(BaseModel):
     """Input for SeleniumScraper"""
-    website_url: str = Field(..., description="The URL of the website to scrape")
-    css_element: str = Field(default="body", description="CSS selector to target specific elements")
-    wait_time: int = Field(default=5, description="Time to wait for elements to load")
-    cookie: Optional[Dict] = Field(default=None, description="Cookie information for authentication")
+    website_url: str = Field(..., description="The URL of the website to scrape")  # Required URL parameter
+    css_element: str = Field(default="body", description="CSS selector to target specific elements")  # Optional CSS selector, defaults to body
+    wait_time: int = Field(default=5, description="Time to wait for elements to load")  # Optional wait time, defaults to 5 seconds
+    cookie: Optional[Dict] = Field(default=None, description="Cookie information for authentication")  # Optional cookie data
 
+# Main scraper class that inherits from BaseTool
 class SeleniumScraper(BaseTool):
     name: str = "Selenium Web Scraper"
     description: str = """
@@ -32,102 +35,98 @@ class SeleniumScraper(BaseTool):
 
     def _run(self, website_url: str, css_element: str = "body", wait_time: int = 5, cookie: Optional[Dict] = None) -> str:
         try:
-            # Update Chrome options
+            # Configure Chrome browser options for headless operation
             options = webdriver.ChromeOptions()
-            options.add_argument('--headless')
-            options.add_argument('--no-sandbox')
-            options.add_argument('--disable-dev-shm-usage')
-            options.add_argument('--disable-gpu')
-            options.add_argument('--ignore-certificate-errors')
-            options.add_argument('--disable-extensions')
+            options.add_argument('--headless')  # Run browser in background
+            options.add_argument('--no-sandbox')  # Bypass OS security model
+            options.add_argument('--disable-dev-shm-usage')  # Overcome limited resource problems
+            options.add_argument('--disable-gpu')  # Disable GPU hardware acceleration
+            options.add_argument('--ignore-certificate-errors')  # Ignore SSL/TLS errors
+            options.add_argument('--disable-extensions')  # Disable browser extensions
+            options.add_argument('--disable-web-security')  # Disable web security
+            options.add_argument('--allow-running-insecure-content')  # Allow mixed content
+            options.add_argument('--window-size=1920,1080')  # Set window size
+            options.page_load_strategy = 'eager'  # Don't wait for all resources to load
             
-            # Add user agent
-            options.add_argument('--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.212 Safari/537.36')
+            # Set a realistic user agent to avoid detection
+            options.add_argument('--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36')
 
-            # Initialize the driver with a service object
+            # Initialize Chrome driver
             service = webdriver.ChromeService()
             driver = webdriver.Chrome(service=service, options=options)
             
-            # Set cookie if provided
-            if cookie:
-                driver.get(website_url)
-                driver.add_cookie(cookie)
-
-            # Navigate to the URL
-            driver.get(website_url)
-
             try:
-                # Wait for elements to be present
-                elements = WebDriverWait(driver, wait_time).until(
-                    EC.presence_of_all_elements_located((By.CSS_SELECTOR, css_element))
+                # Set timeouts for page load and script execution
+                driver.set_page_load_timeout(wait_time)
+                driver.set_script_timeout(wait_time)
+                
+                # Load the webpage
+                driver.get(website_url)
+                
+                # Wait for the body element to be present
+                WebDriverWait(driver, 3).until(
+                    EC.presence_of_element_located((By.TAG_NAME, "body"))
                 )
-
-                # Get the page source after JavaScript execution
+                
+                # Get and parse the page HTML
                 page_source = driver.page_source
                 soup = BeautifulSoup(page_source, 'html.parser')
                 
-                # Get all text content for word frequency analysis
-                text_content = soup.get_text()
-                # Clean and tokenize the text
-                words = re.findall(r'\b\w+\b', text_content.lower())
-                # Count word frequency
-                word_freq = Counter(words).most_common(10)
-                
-                # Count meta tag types and their frequency
-                meta_tags = soup.find_all('meta')
-                meta_types = []
-                for tag in meta_tags:
-                    if tag.get('name'):
-                        meta_types.append(tag.get('name'))
-                    elif tag.get('property'):
-                        meta_types.append(tag.get('property'))
-                meta_freq = Counter(meta_types).most_common()
-                
-                # Find all elements matching the CSS selector
-                elements = soup.select(css_element)
-                
                 results = []
-                for element in elements:
-                    if element.name == 'meta':
-                        attrs = {
-                            'name': element.get('name', ''),
-                            'content': element.get('content', ''),
-                            'property': element.get('property', '')
-                        }
-                        results.append(f"Meta: {attrs}")
-                    
-                    elif element.name in ['h1', 'h2', 'h3', 'h4', 'h5', 'h6']:
-                        results.append(f"{element.name}: {element.text.strip()}")
-                    
-                    elif element.name == 'a':
-                        href = element.get('href', '')
-                        text = element.text.strip()
-                        results.append(f"Link: {text} -> {href}")
-                    
-                    elif element.name == 'img':
-                        src = element.get('src', '')
-                        alt = element.get('alt', '')
-                        results.append(f"Image: {src} (alt: {alt})")
-                    
-                    else:
-                        results.append(element.text.strip())
-
-                # Add word frequency and meta tag frequency to results
-                results.append("\nMost Frequent Words:")
-                for word, count in word_freq:
-                    results.append(f"- {word}: {count} occurrences")
                 
-                results.append("\nMost Used Meta Tags:")
-                for meta_type, count in meta_freq:
-                    results.append(f"- {meta_type}: {count} occurrences")
-
+                # Enhanced meta tag analysis
+                meta_tags = soup.find_all('meta')
+                meta_analysis = {}
+                for tag in meta_tags:
+                    tag_type = tag.get('name', tag.get('property', 'other'))
+                    if tag_type not in meta_analysis:
+                        meta_analysis[tag_type] = 0
+                    meta_analysis[tag_type] += 1
+                
+                results.append("=== Meta Tag Analysis ===")
+                for tag_type, count in meta_analysis.items():
+                    results.append(f"Meta tag '{tag_type}': {count}")
+                
+                # Word frequency analysis
+                text_content = soup.get_text()
+                words = re.findall(r'\b\w+\b', text_content.lower())
+                word_freq = Counter(words).most_common(20)  # Get top 20 words
+                
+                results.append("\n=== Word Frequency Analysis ===")
+                results.append("Most frequent words (excluding common stop words):")
+                stop_words = {'the', 'be', 'to', 'of', 'and', 'a', 'in', 'that', 'have', 'i', 'it', 'for', 'not', 'on', 'with', 'he', 'as', 'you', 'do', 'at'}
+                for word, count in word_freq:
+                    if word not in stop_words and len(word) > 2:
+                        results.append(f"'{word}': {count} occurrences")
+                
+                # Extract all heading levels (h1-h6) and their text
+                for level in range(1, 7):
+                    headings = soup.find_all(f'h{level}')
+                    for heading in headings:
+                        results.append(f"h{level}: {heading.text.strip()}")
+                
+                # Extract links with their text and href attributes
+                links = soup.find_all('a')
+                for link in links:
+                    href = link.get('href', '')
+                    text = link.text.strip()
+                    results.append(f"Link: {text} -> {href}")
+                
+                # Extract images with their src and alt attributes
+                images = soup.find_all('img')
+                for img in images:
+                    src = img.get('src', '')
+                    alt = img.get('alt', '')
+                    results.append(f"Image: {src} (alt: {alt})")
+                
                 return "\n".join(filter(None, results))
-
-            except TimeoutException:
-                return f"Timeout waiting for elements matching selector: {css_element}"
+                
+            except Exception as e:
+                return f"Error processing page: {str(e)}"
             
             finally:
+                # Always close the browser
                 driver.quit()
 
         except Exception as e:
-            return f"Error scraping {website_url}: {str(e)}" 
+            return f"Error initializing scraper: {str(e)}" 

@@ -47,6 +47,7 @@ Required packages:
 - pydantic
 - openai
 - PyYAML
+- pip install mdpdf
 
 ### Environment Setup
 1. Create a `.env` file in the root directory

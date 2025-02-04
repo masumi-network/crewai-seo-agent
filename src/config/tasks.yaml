@@ -25,6 +25,12 @@ data_collection_task:
        - Responsive images
        - Mobile compatibility score
 
+    4. Using OffPageSEOAnalyzer, analyze:
+       - Backlink profile and metrics
+       - Social media presence and engagement
+       - Brand mentions and sentiment
+       - Domain authority indicators
+
     IMPORTANT: Provide NUMERICAL data wherever possible. Do not make assumptions.
 
   expected_output: >
@@ -32,34 +38,43 @@ data_collection_task:
 
     1. Meta Tags Analysis:
        - Total number of meta tags: [X]
-       - Types found: [List each type with count]
-       - Meta description length: [X] characters
+       - Most used meta tags:
+         * [tag_type]: [count] occurrences
+         * [tag_type]: [count] occurrences
+         ...
     
-    2. Content Structure:
+    2. Content Analysis:
+       - Most frequent words:
+         * [word]: [count] occurrences
+         * [word]: [count] occurrences
+         ...
+       - Word density percentages
+    
+    3. Content Structure:
        - H1 tags: [X]
        - H2 tags: [X]
        - H3 tags: [X]
        - H4-H6 tags: [X]
        - Total word count: [X]
     
-    3. Link Analysis:
+    4. Link Analysis:
        - Internal links: [X]
        - External links: [X]
        - Unique domains linked: [List]
        - Broken links found: [X]
     
-    4. Media Inventory:
+    5. Media Inventory:
        - Total images: [X]
        - Images with alt text: [X]
        - Images without alt text: [X]
     
-    5. Performance Metrics:
+    6. Performance Metrics:
        - Average load time: [X] ms
        - Fastest load: [X] ms
        - Slowest load: [X] ms
        - Sample size: [X]
 
-    6. Mobile Optimization Metrics:
+    7. Mobile Optimization Metrics:
        - Viewport Meta Tag: [Yes/No]
        - Text Readability Score: [X]%
        - Tap Target Spacing Score: [X]%
