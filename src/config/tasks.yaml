@@ -5,46 +5,117 @@ data_collection_task:
     Analyze and collect SPECIFIC metrics using the tools:
 
     1. Using SeleniumScraper, collect and count:
-       - Meta tags and their types with descriptions
-       - Heading structure and content hierarchy
-       - Keyword usage and semantic relationships
-       - Internal/external link patterns
-       - Image optimization status
-       - Page structure and content organization
+       - Meta tags and their types
+       - Total number of headings (h1-h6) with their distribution
+       - Exact keyword count and density percentages
+       - Total number of internal and external links
+       - Number of images and their alt text status
+       - List all unique URLs found
+       - Extract and list all meta descriptions
 
     2. Using LoadingTimeTracker, measure:
-       - Page load time distribution
-       - Performance bottlenecks
-       - Resource loading patterns
+       - Exact page load times with millisecond precision
+       - Number of samples taken
+       - Performance variance
 
     3. Using MobileOptimizationTool, analyze:
-       - Responsive design implementation
-       - Mobile-specific features
-       - Touch target compliance
-       - Content adaptation
+       - Viewport meta tag presence
+       - Text readability (font sizes)
+       - Tap target spacing
+       - Responsive images
+       - Mobile compatibility score
 
-    4. Using OffPageSEOAnalyzer, examine:
-       - Link profile quality and diversity
-       - Social media engagement patterns
-       - Brand visibility metrics
-       - Content distribution effectiveness
+    4. Using OffPageSEOAnalyzer, analyze:
+       - External linking patterns
+       - Social media footprint
+       - Brand presence indicators
+       - Content distribution
 
     5. Using ReferringDomainAnalyzer, analyze:
-       - Referring domain quality
-       - Reference context and relevance
-       - Authority patterns
-       - Industry relationships
+       - Referring websites
+       - Reference context
+       - Domain categories
+       - Reference strength
 
-    6. Using SubpageAnalyzer, evaluate:
-       - Content hierarchy
-       - Internal linking structure
-       - Page importance distribution
+    6. Using SubpageAnalyzer, analyze:
+       - Top performing pages
        - Content quality metrics
+       - Internal link structure
+       - Page importance scores
 
-    IMPORTANT: Provide NUMERICAL data and specific URLs wherever possible.
+    IMPORTANT: Provide NUMERICAL data wherever possible. Do not make assumptions.
 
   expected_output: >
-    [Detailed output format with specific metrics and URLs]
+    ANALYSIS REPORT FOR: {website_url}
+
+    1. Meta Tags Analysis:
+       - Total number of meta tags: [X]
+       - Most used meta tags:
+         * [tag_type]: [count] occurrences
+         * [tag_type]: [count] occurrences
+    
+    2. Content Analysis:
+       - Most frequent words:
+         * [word]: [count] occurrences
+         * [word]: [count] occurrences
+       - Word density percentages
+    
+    3. Content Structure:
+       - H1 tags: [X]
+       - H2 tags: [X]
+       - H3 tags: [X]
+       - H4-H6 tags: [X]
+       - Total word count: [X]
+    
+    4. Link Analysis:
+       - Internal links: [X]
+       - External links: [X]
+       - Unique domains linked: [List]
+       - Broken links found: [X]
+    
+    5. Media Inventory:
+       - Total images: [X]
+       - Images with alt text: [X]
+       - Images without alt text: [X]
+    
+    6. Performance Metrics:
+       - Average load time: [X] ms
+       - Fastest load: [X] ms
+       - Slowest load: [X] ms
+       - Sample size: [X]
+
+    7. Mobile Optimization:
+       - Viewport Meta Tag: [Yes/No]
+       - Text Readability Score: [X]%
+       - Tap Target Spacing Score: [X]%
+       - Responsive Images Score: [X]%
+       - Overall Mobile Score: [X]%
+
+    8. Off-Page Analysis:
+       - External Link Distribution:
+         * Educational links: [X]
+         * Government links: [X]
+         * Organization links: [X]
+         * Commercial links: [X]
+       - Authority Score: [X]%
+       - Brand Presence Score: [X]%
+
+    9. Referring Domains:
+       - Total referring domains: [X]
+       - Domain categories distribution:
+         * [category]: [count]
+       - Strongest references: [List top 5]
+
+    10. Top Subpages:
+       - Number of analyzed pages: [X]
+       - Average importance score: [X]
+       - Top 5 pages by importance:
+         * [URL]: Score [X]
+         * Content metrics
+         * Link metrics
+
+    Raw Data Summary:
+    [Include specific data points found during analysis]
   agent: scraper_agent
 
 analysis_task:

@@ -42,7 +42,7 @@ class ReferringDomainAnalyzer(BaseTool):
             return f"Error analyzing referring domains: {str(e)}"
 
     def _find_referring_domains(self, target_domain: str) -> list:
-        """Enhanced method to find referring domains with better data collection"""
+        """Finds domains referring to the target website"""
         try:
             headers = {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
@@ -50,17 +50,14 @@ class ReferringDomainAnalyzer(BaseTool):
             
             urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
             
-            # Expanded list of sources to check
+            # Common sites where we might find references
             potential_sources = [
                 f"https://www.google.com/search?q=link:{target_domain}",
                 f"https://www.bing.com/search?q=link:{target_domain}",
                 f"https://github.com/search?q={target_domain}",
                 f"https://www.reddit.com/search?q={target_domain}",
                 f"https://twitter.com/search?q={target_domain}",
-                f"https://medium.com/search?q={target_domain}",
-                f"https://stackoverflow.com/search?q={target_domain}",
-                f"https://dev.to/search?q={target_domain}",
-                f"https://news.ycombinator.com/from?site={target_domain}"
+                f"https://medium.com/search?q={target_domain}"
             ]
             
             referring_data = []
@@ -70,39 +67,28 @@ class ReferringDomainAnalyzer(BaseTool):
                     response = requests.get(source, headers=headers, timeout=10, verify=False)
                     soup = BeautifulSoup(response.text, 'html.parser')
                     
-                    # Enhanced link extraction
-                    links = self._extract_links(soup, target_domain)
-                    referring_data.extend(links)
-                    
+                    # Find all links
+                    for link in soup.find_all('a', href=True):
+                        href = link['href']
+                        if href.startswith(('http://', 'https://')):
+                            parsed_url = urlparse(href)
+                            domain = parsed_url.netloc
+                            if domain and domain != target_domain:
+                                context = self._extract_context(link)
+                                referring_data.append({
+                                    'domain': domain,
+                                    'url': href,
+                                    'context': context
+                                })
+                                
                     time.sleep(1)  # Be nice to servers
                 except:
                     continue
             
-            # Remove duplicates while preserving the best context
-            return self._deduplicate_references(referring_data)
+            return referring_data
             
         except Exception as e:
             return []
-
-    def _extract_links(self, soup: BeautifulSoup, target_domain: str) -> list:
-        """Enhanced link extraction with better context analysis"""
-        links = []
-        for link in soup.find_all('a', href=True):
-            href = link['href']
-            if href.startswith(('http://', 'https://')):
-                parsed_url = urlparse(href)
-                domain = parsed_url.netloc
-                if domain and domain != target_domain:
-                    context = self._extract_enhanced_context(link)
-                    links.append({
-                        'domain': domain,
-                        'url': href,
-                        'context': context,
-                        'text': link.get_text().strip(),
-                        'surrounding_text': self._get_surrounding_text(link),
-                        'relevance_score': self._calculate_relevance_score(link, target_domain)
-                    })
-        return links
 
     def _extract_context(self, link_element) -> str:
         """Extracts context around the link"""

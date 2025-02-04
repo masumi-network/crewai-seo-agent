@@ -7,6 +7,7 @@ from urllib.parse import urljoin, urlparse
 import xml.etree.ElementTree as ET
 from collections import defaultdict
 import re
+import time
 
 class SubpageAnalyzerInput(BaseModel):
     """Input parameters for subpage analysis"""
@@ -82,42 +83,72 @@ class SubpageAnalyzer(BaseTool):
         to_crawl = {base_url}
         crawled = set()
         
-        headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8'
+        }
         
         while to_crawl and len(found_pages) < max_pages:
-            url = to_crawl.pop()
-            if url in crawled:
-                continue
-                
             try:
-                response = requests.get(url, headers=headers, timeout=10)
-                soup = BeautifulSoup(response.text, 'html.parser')
-                
-                # Find all links
-                for link in soup.find_all('a', href=True):
-                    href = link['href']
-                    full_url = urljoin(base_url, href)
+                url = to_crawl.pop()
+                if url in crawled:
+                    continue
                     
-                    # Only include URLs from the same domain
-                    if urlparse(full_url).netloc == urlparse(base_url).netloc:
-                        found_pages.add(full_url)
-                        to_crawl.add(full_url)
+                response = requests.get(url, headers=headers, timeout=10, verify=False)
+                if response.status_code == 200:
+                    soup = BeautifulSoup(response.text, 'html.parser')
+                    
+                    # Find all links
+                    for link in soup.find_all('a', href=True):
+                        href = link['href']
+                        full_url = urljoin(base_url, href)
                         
-                crawled.add(url)
-                
-            except:
+                        # Only include URLs from same domain
+                        if (urlparse(full_url).netloc == urlparse(base_url).netloc and
+                            not full_url.endswith(('.pdf', '.jpg', '.png', '.gif'))):
+                            found_pages.add(full_url)
+                            if full_url not in crawled:
+                                to_crawl.add(full_url)
+                                
+                    crawled.add(url)
+                    time.sleep(0.5)  # Be nice to servers
+                    
+            except Exception as e:
+                print(f"Error crawling {url}: {str(e)}")
                 continue
                 
         return list(found_pages)
+
+    def _calculate_authority_score(self, domains: set) -> float:
+        """Calculates domain authority score"""
+        try:
+            if not domains:  # If no domains found
+                return 0.0
+            edu_gov_org = sum(1 for d in domains if any(ext in d for ext in ['.edu', '.gov', '.org']))
+            return min(100, (edu_gov_org / len(domains)) * 100)
+        except ZeroDivisionError:
+            return 0.0
 
     def _analyze_subpages(self, urls: List[str], min_content_length: int) -> List[Dict]:
         """Analyzes each subpage for various metrics"""
         analyzed_pages = []
         headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
         
+        if not urls:  # If no URLs found
+            return [{
+                'url': 'No subpages found',
+                'title': 'No title',
+                'content_length': 0,
+                'headings': 0,
+                'images': 0,
+                'internal_links': 0,
+                'external_links': 0,
+                'importance_score': 0
+            }]
+        
         for url in urls:
             try:
-                response = requests.get(url, headers=headers, timeout=10)
+                response = requests.get(url, headers=headers, timeout=10, verify=False)
                 soup = BeautifulSoup(response.text, 'html.parser')
                 
                 # Extract main content
@@ -144,10 +175,19 @@ class SubpageAnalyzer(BaseTool):
                 
                 analyzed_pages.append(page_metrics)
                 
-            except:
+            except Exception as e:
                 continue
         
-        return analyzed_pages
+        return analyzed_pages or [{  # Return default if no pages were successfully analyzed
+            'url': 'Analysis failed',
+            'title': 'No title',
+            'content_length': 0,
+            'headings': 0,
+            'images': 0,
+            'internal_links': 0,
+            'external_links': 0,
+            'importance_score': 0
+        }]
 
     def _extract_main_content(self, soup: BeautifulSoup) -> str:
         """Extracts main content from page, excluding navigation, footer, etc."""
@@ -189,10 +229,17 @@ class SubpageAnalyzer(BaseTool):
 
     def _format_results(self, analyzed_pages: List[Dict]) -> str:
         """Formats analysis results into a readable report"""
+        if not analyzed_pages:
+            return "No subpages found or analysis failed"
+            
         # Sort pages by importance score
         sorted_pages = sorted(analyzed_pages, key=lambda x: x['importance_score'], reverse=True)
         
         report = ["=== Top Subpages Analysis ===\n"]
+        
+        if sorted_pages[0]['url'] in ['No subpages found', 'Analysis failed']:
+            report.append("No accessible subpages found or analysis failed")
+            return "\n".join(report)
         
         for i, page in enumerate(sorted_pages[:10], 1):
             report.append(f"{i}. {page['title']}")
@@ -206,9 +253,10 @@ class SubpageAnalyzer(BaseTool):
             report.append(f"   - Importance Score: {page['importance_score']:.2f}\n")
         
         # Add summary statistics
-        avg_score = sum(p['importance_score'] for p in analyzed_pages) / len(analyzed_pages)
-        report.append(f"\nAnalysis Summary:")
-        report.append(f"- Total Pages Analyzed: {len(analyzed_pages)}")
-        report.append(f"- Average Importance Score: {avg_score:.2f}")
+        if len(analyzed_pages) > 0:
+            avg_score = sum(p['importance_score'] for p in analyzed_pages) / len(analyzed_pages)
+            report.append(f"\nAnalysis Summary:")
+            report.append(f"- Total Pages Analyzed: {len(analyzed_pages)}")
+            report.append(f"- Average Importance Score: {avg_score:.2f}")
         
         return "\n".join(report) 

@@ -1,14 +1,21 @@
 #!/usr/bin/env python
+# This is the main entry point file for an SEO analysis tool that uses crewAI
+
 import sys
 import warnings
-from crew import SEOAnalyseCrew
+from crew import SEOAnalyseCrew  # Imports the custom SEO analysis crew
 import openai
 
+# Ignore syntax warnings from the pysbd module
 warnings.filterwarnings("ignore", category=SyntaxWarning, module="pysbd")
 
 def check_openai_connection():
+    """
+    Tests the connection to OpenAI's API by making a small test request.
+    Returns True if successful, False if there are any connection issues.
+    """
     try:
-        # Test the API connection
+        # Makes a minimal API call to test connectivity
         openai.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[{"role": "user", "content": "test"}],
@@ -16,29 +23,36 @@ def check_openai_connection():
         )
         return True
     except Exception as e:
+        # Prints helpful error message if connection fails
         print(f"Error connecting to OpenAI API: {str(e)}")
         print("Please check your internet connection and API key.")
         return False
 
 def run():
     """
-    Run the crew.
+    Main function that:
+    1. Checks OpenAI connectivity
+    2. Gets website URL from user
+    3. Creates and runs the SEO analysis crew
     """
+    # Exit if OpenAI connection fails
     if not check_openai_connection():
         sys.exit(1)
         
-    # Prompt for website URL
+    # Get the target website URL from user input
     website_url = input("Enter the website URL to make SEO analysis: ")
     
-    # Create crew with the URL
+    # Initialize the SEO analysis crew with the URL
     crew = SEOAnalyseCrew(website_url)
     
-    # Get the crew instance and kickoff
+    # Get crew instance and start analysis
+    # Handles both old and new versions of crewAI
     crew_instance = crew.crew()
     if hasattr(crew_instance, 'kickoff'):
-        result = crew_instance.kickoff()
+        result = crew_instance.kickoff()  # Old version
     else:
-        result = crew_instance  # For newer versions of crewAI
+        result = crew_instance  # New version
 
+# Run the analysis if this file is executed directly
 if __name__ == "__main__":
     run()

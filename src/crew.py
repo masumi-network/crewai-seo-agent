@@ -48,6 +48,13 @@ class SEOAnalyseCrew():
             self.agents_config = yaml.safe_load(f)
         with open(self.tasks_config, 'r') as f:
             self.tasks_config = yaml.safe_load(f)
+            
+        # Initialize agents dictionary
+        self.agents = {
+            'scraper_agent': self.scraper_agent(),
+            'analyse_agent': self.analyse_agent(),
+            'optimization_agent': self.optimization_agent()
+        }
 
     # Configure GPT-4 with specific settings
     openai_llm = LLM(
@@ -60,9 +67,11 @@ class SEOAnalyseCrew():
 
     @agent
     def scraper_agent(self) -> Agent:
-        """Agent responsible for collecting data from the website"""		
+        """Agent responsible for collecting data from the website"""        
         return Agent(
-            config=self.agents_config['scraper_agent'],
+            role=self.agents_config['scraper_agent']['role'],
+            goal=self.agents_config['scraper_agent']['goal'],
+            backstory=self.agents_config['scraper_agent']['backstory'],
             tools=[
                 SeleniumScraper(),
                 LoadingTimeTracker(),
@@ -79,7 +88,9 @@ class SEOAnalyseCrew():
     def analyse_agent(self) -> Agent:
         """Agent responsible for analyzing collected data"""
         return Agent(
-            config=self.agents_config['analyse_agent'],
+            role=self.agents_config['analyse_agent']['role'],
+            goal=self.agents_config['analyse_agent']['goal'],
+            backstory=self.agents_config['analyse_agent']['backstory'],
             verbose=True,
             llm=self.openai_llm  
         )
@@ -88,7 +99,9 @@ class SEOAnalyseCrew():
     def optimization_agent(self) -> Agent:
         """Agent responsible for providing optimization recommendations"""
         return Agent(
-            config=self.agents_config['optimization_agent'],
+            role=self.agents_config['optimization_agent']['role'],
+            goal=self.agents_config['optimization_agent']['goal'],
+            backstory=self.agents_config['optimization_agent']['backstory'],
             verbose=True,
             llm=self.openai_llm  
         )
@@ -99,8 +112,10 @@ class SEOAnalyseCrew():
         task_config = self.tasks_config['data_collection_task']
         return Task(
             description=task_config['description'].format(website_url=self.website_url),
-            agent=self.scraper_agent(),
-            expected_output=task_config['expected_output'],
+            expected_output=task_config['expected_output'].format(website_url=self.website_url),
+            agent=self.agents['scraper_agent'],  # Use the agent from self.agents
+            context_variables={"website_url": self.website_url},
+            max_retries=3
         )
 
     @task
@@ -109,7 +124,7 @@ class SEOAnalyseCrew():
         task_config = self.tasks_config['analysis_task']
         return Task(
             description=task_config['description'].format(website_url=self.website_url),
-            agent=self.analyse_agent(),
+            agent=self.agents['analyse_agent'],  # Use the agent from self.agents
             expected_output=task_config['expected_output'],
             output_file='report.md'
         )
@@ -120,7 +135,7 @@ class SEOAnalyseCrew():
         task_config = self.tasks_config['optimization_task']
         return Task(
             description=task_config['description'],
-            agent=self.optimization_agent(),
+            agent=self.agents['optimization_agent'],  # Use the agent from self.agents
             expected_output=task_config['expected_output'],
             output_file='report.md'
         )

@@ -7,7 +7,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
 from bs4 import BeautifulSoup
-from collections import Counter
+from collections import Counter, defaultdict
 import re
 import time
 
@@ -34,108 +34,135 @@ class SeleniumScraper(BaseTool):
     args_schema: Type[BaseModel] = SeleniumScraperInput
 
     def _run(self, website_url: str, css_element: str = "body", wait_time: int = 5, cookie: Optional[Dict] = None) -> str:
+        """
+        Runs the scraper with the given parameters
+        """
         try:
-            # Clean up the URL
+            # Clean up URL
             website_url = website_url.strip('"')
             if not website_url.startswith(('http://', 'https://')):
                 website_url = 'https://' + website_url
 
-            # Configure Chrome browser options for headless operation
+            # Configure Chrome options
             options = webdriver.ChromeOptions()
-            options.add_argument('--headless')  # Run browser in background
-            options.add_argument('--no-sandbox')  # Bypass OS security model
-            options.add_argument('--disable-dev-shm-usage')  # Overcome limited resource problems
-            options.add_argument('--disable-gpu')  # Disable GPU hardware acceleration
-            options.add_argument('--ignore-certificate-errors')  # Ignore SSL/TLS errors
-            options.add_argument('--disable-extensions')  # Disable browser extensions
-            options.add_argument('--disable-web-security')  # Disable web security
-            options.add_argument('--allow-running-insecure-content')  # Allow mixed content
-            options.add_argument('--window-size=1920,1080')  # Set window size
-            options.page_load_strategy = 'eager'  # Don't wait for all resources to load
+            options.add_argument('--headless')
+            options.add_argument('--no-sandbox')
+            options.add_argument('--disable-dev-shm-usage')
             
-            # Set a realistic user agent to avoid detection
-            options.add_argument('--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36')
-
-            # Initialize Chrome driver
-            service = webdriver.ChromeService()
-            driver = webdriver.Chrome(service=service, options=options)
+            # Initialize driver
+            driver = webdriver.Chrome(options=options)
             
             try:
-                # Set timeouts for page load and script execution
+                # Set page load timeout
                 driver.set_page_load_timeout(wait_time)
-                driver.set_script_timeout(wait_time)
                 
-                # Load the webpage
+                # Load the page
                 driver.get(website_url)
                 
-                # Add cookies if provided
-                if cookie and isinstance(cookie, dict):
-                    for name, value in cookie.items():
-                        driver.add_cookie({'name': name, 'value': value})
-                    driver.refresh()  # Refresh page with new cookies
-                
-                # Wait for the body element to be present
+                # Wait for elements to load
                 WebDriverWait(driver, wait_time).until(
-                    EC.presence_of_element_located((By.TAG_NAME, "body"))
+                    EC.presence_of_element_located((By.CSS_SELECTOR, css_element))
                 )
                 
-                # Get and parse the page HTML
-                page_source = driver.page_source
-                soup = BeautifulSoup(page_source, 'html.parser')
+                # Get page source and parse
+                soup = BeautifulSoup(driver.page_source, 'html.parser')
                 
-                results = []
+                # Analyze different elements
+                analysis = {
+                    'meta_tags': self._analyze_meta_tags(soup),
+                    'headings': self._analyze_headings(soup),
+                    'keywords': self._analyze_keywords(soup),
+                    'links': self._analyze_links(soup, website_url),
+                    'images': self._analyze_images(soup)
+                }
                 
-                # Enhanced meta tag analysis
-                meta_tags = soup.find_all('meta')
-                meta_analysis = {}
-                for tag in meta_tags:
-                    tag_type = tag.get('name', tag.get('property', 'other'))
-                    meta_analysis[tag_type] = meta_analysis.get(tag_type, 0) + 1
+                return self._format_results(analysis)
                 
-                results.append("=== Meta Tag Analysis ===")
-                for tag_type, count in meta_analysis.items():
-                    results.append(f"Meta tag '{tag_type}': {count}")
-                
-                # Word frequency analysis
-                text_content = soup.get_text()
-                words = re.findall(r'\b\w+\b', text_content.lower())
-                word_freq = Counter(words).most_common(20)  # Get top 20 words
-                
-                results.append("\n=== Word Frequency Analysis ===")
-                results.append("Most frequent words (excluding common stop words):")
-                stop_words = {'the', 'be', 'to', 'of', 'and', 'a', 'in', 'that', 'have', 'i', 'it', 'for', 'not', 'on', 'with', 'he', 'as', 'you', 'do', 'at'}
-                for word, count in word_freq:
-                    if word not in stop_words and len(word) > 2:
-                        results.append(f"'{word}': {count} occurrences")
-                
-                # Extract all heading levels (h1-h6) and their text
-                for level in range(1, 7):
-                    headings = soup.find_all(f'h{level}')
-                    for heading in headings:
-                        results.append(f"h{level}: {heading.text.strip()}")
-                
-                # Extract links with their text and href attributes
-                links = soup.find_all('a', href=True)
-                for link in links:
-                    href = link.get('href', '')
-                    text = link.text.strip()
-                    results.append(f"Link: {text} -> {href}")
-                
-                # Extract images with their src and alt attributes
-                images = soup.find_all('img')
-                for img in images:
-                    src = img.get('src', '')
-                    alt = img.get('alt', '')
-                    results.append(f"Image: {src} (alt: {alt})")
-                
-                return "\n".join(filter(None, results))
-                
-            except Exception as e:
-                return f"Error processing page: {str(e)}"
-            
             finally:
-                # Always close the browser
                 driver.quit()
-
+                
         except Exception as e:
-            return f"Error initializing scraper: {str(e)}" 
+            return f"Error scraping website: {str(e)}"
+
+    def _analyze_meta_tags(self, soup: BeautifulSoup) -> Dict:
+        """Analyzes meta tags"""
+        meta_tags = soup.find_all('meta')
+        meta_analysis = defaultdict(int)
+        meta_descriptions = []
+        
+        for tag in meta_tags:
+            tag_type = tag.get('name', tag.get('property', 'other'))
+            meta_analysis[tag_type] += 1
+            if tag_type == 'description':
+                meta_descriptions.append(tag.get('content', ''))
+                
+        return {
+            'counts': dict(meta_analysis),
+            'descriptions': meta_descriptions
+        }
+
+    def _analyze_keywords(self, soup: BeautifulSoup) -> Dict:
+        """Analyzes keyword frequency and density"""
+        # Get text content
+        text = soup.get_text()
+        
+        # Clean and tokenize
+        words = re.findall(r'\b\w+\b', text.lower())
+        
+        # Count frequencies
+        word_freq = Counter(words)
+        total_words = len(words)
+        
+        # Calculate density
+        keyword_density = {
+            word: (count / total_words) * 100 
+            for word, count in word_freq.most_common(20)
+        }
+        
+        return {
+            'frequencies': dict(word_freq.most_common(20)),
+            'density': keyword_density,
+            'total_words': total_words
+        }
+
+    def _analyze_headings(self, soup: BeautifulSoup) -> Dict:
+        """Analyzes headings"""
+        headings = {}
+        for level in range(1, 7):
+            headings[f'h{level}'] = [heading.text.strip() for heading in soup.find_all(f'h{level}')]
+        return headings
+
+    def _analyze_links(self, soup: BeautifulSoup, website_url: str) -> Dict:
+        """Analyzes links"""
+        links = []
+        for link in soup.find_all('a', href=True):
+            href = link.get('href', '')
+            text = link.text.strip()
+            links.append(f"{text} -> {href}")
+        return links
+
+    def _analyze_images(self, soup: BeautifulSoup) -> Dict:
+        """Analyzes images"""
+        images = []
+        for img in soup.find_all('img'):
+            src = img.get('src', '')
+            alt = img.get('alt', '')
+            images.append(f"Image: {src} (alt: {alt})")
+        return images
+
+    def _format_results(self, analysis: Dict) -> str:
+        """Formats the results"""
+        results = []
+        for element, data in analysis.items():
+            if isinstance(data, dict):
+                results.append(f"=== {element.replace('_', ' ').capitalize()} ===")
+                for key, value in data.items():
+                    if isinstance(value, dict):
+                        for sub_key, sub_value in value.items():
+                            results.append(f"{key.capitalize()}: {sub_key} - {sub_value}")
+                    else:
+                        results.append(f"{key.capitalize()}: {value}")
+            else:
+                results.append(f"=== {element.replace('_', ' ').capitalize()} ===")
+                results.append(str(data))
+        return "\n".join(results) 
