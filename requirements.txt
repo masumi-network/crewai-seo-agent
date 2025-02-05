@@ -1,0 +1,12 @@
+crewai[tools]>=0.79.4
+selenium>=4.0.0
+beautifulsoup4>=4.9.3
+requests>=2.25.1
+python-dotenv>=0.19.0
+pydantic>=2.0.0
+openai>=1.0.0
+PyYAML>=5.4.1
+markdown>=3.3.4
+reportlab>=3.6.8
+urllib3>=1.26.7
+lxml>=4.9.0 
