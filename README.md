@@ -95,7 +95,7 @@ BROWSERLESS_API_KEY=your_browserless_api_key_here
 
 ## Output
 
-The analysis generates a detailed report in `report.md` containing:
+The analysis generates a detailed report in `seo_report-{domain}` containing:
 
 1. Technical Analysis
    - Meta tag inventory

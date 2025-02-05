@@ -3,41 +3,44 @@ data_collection_task:
     WEBSITE BEING ANALYZED: {website_url}
 
     Analyze and collect SPECIFIC metrics using the tools:
+    1. Using BrowserlessScraper, collect and analyze:
+       - Meta tags and SEO elements
+       - Content structure (headings h1-h6)
+       - Keyword frequency and density analysis
+       - Internal and external link mapping
+       - Images and media inventory
+       - Complete URL directory
+       - Meta descriptions extraction
 
-    1. Using SeleniumScraper, collect and count:
-       - Meta tags and their types
-       - Total number of headings (h1-h6) with their distribution
-       - Exact keyword count and density percentages
-       - Total number of internal and external links
-       - Number of images and their alt text status
-       - List all unique URLs found
-       - Extract and list all meta descriptions
+    2. Using SubpageAnalyzer, analyze:
+       - Page crawl and indexing status
+       - Content quality assessment
+       - User engagement metrics
+       - Internal linking patterns
+       - Page authority scoring
+       - JavaScript-rendered content
 
-    2. Using LoadingTimeTracker, measure:
-       - Exact page load times with millisecond precision
-       - Number of samples taken
-       - Performance variance
+    3. Using LoadingTimeTracker:
+       - Page load timing analysis
+       - Resource loading sequences
+       - Performance bottlenecks
+       - Network request patterns
+       - Page size measurements
+       - Performance ratings
 
-    3. Using MobileOptimizationTool, analyze:
-       - Viewport meta tag presence
-       - Text readability (font sizes)
-       - Tap target spacing
-       - Responsive images
-       - Mobile compatibility score
-
-    4. Using OffPageSEOAnalyzer, analyze:
-       - External linking patterns
-       - Social media footprint
-       - Brand presence indicators
-       - Content distribution
-
-    5. Using SubpageAnalyzer, analyze:
-       - Top performing pages
-       - Content quality metrics
-       - Internal link structure
-       - Page importance scores
+    4. Using MobileTesting:
+       - Viewport configuration
+       - Mobile responsiveness
+       - Touch element spacing
+       - Font size accessibility
+       - Content scaling
+       - Mobile-friendly images
+       - Media query implementation
+       - Mobile performance metrics
+       - User experience factors
 
     IMPORTANT: Provide NUMERICAL data wherever possible. Do not make assumptions.
+
 
   expected_output: >
     ANALYSIS REPORT FOR: {website_url}
@@ -85,22 +88,7 @@ data_collection_task:
        - Responsive Images Score: [X]%
        - Overall Mobile Score: [X]%
 
-    8. Off-Page Analysis:
-       - External Link Distribution:
-         * Educational links: [X]
-         * Government links: [X]
-         * Organization links: [X]
-         * Commercial links: [X]
-       - Authority Score: [X]%
-       - Brand Presence Score: [X]%
-
-    9. Referring Domains:
-       - Total referring domains: [X]
-       - Domain categories distribution:
-         * [category]: [count]
-       - Strongest references: [List top 5]
-
-    10. Top Subpages:
+    9. Top Subpages:
        - Number of analyzed pages: [X]
        - Average importance score: [X]
        - Top 5 pages by importance:
@@ -170,7 +158,6 @@ optimization_task:
     1. Priority Issues (List top 5 with metrics)
     2. Expected Impact (Percentage improvements)
     3. Implementation Timeline (With specific milestones)
-
     4. Page-Specific Recommendations:
        - Content enhancement suggestions
        - Structure improvements
@@ -194,10 +181,11 @@ optimization_task:
        - Most Used Meta Tags: [List]
        - Mobile Compatibility: [X]%
        - Most Frequent Words: [List top 10 with count]
+       - TopSubpages [List of subpages with metrics]
 
     Page-Specific Optimizations:
     1. High-Priority Pages:
-       - [URL]: [Specific recommendations]
+       - [Subpage URL]: [Specific recommendations]
     2. Content Gaps:
        - [Identified gaps]
        - [Improvement suggestions]
@@ -206,67 +194,3 @@ optimization_task:
        - [Internal linking strategies]
 
   agent: optimization_agent
-
-technical_analysis:
-  description: >
-    Analyze the technical SEO aspects of {website_url} using the BrowserlessScraper tool.
-    
-    1. Collect and analyze:
-       - All meta tags and their content
-       - Heading structure (h1-h6)
-       - Internal and external links
-       - Image optimization (alt tags, dimensions)
-       - Content structure and readability
-    
-    2. Measure performance:
-       - Page load times
-       - Mobile optimization scores
-       - Technical SEO metrics
-    
-    3. Provide detailed metrics on:
-       - Meta tag coverage
-       - Content structure quality
-       - Link profile health
-       - Image optimization status
-       - Overall technical score
-
-content_analysis:
-  description: >
-    Analyze the content quality and SEO optimization of {website_url}.
-    
-    1. Using BrowserlessScraper, analyze:
-       - Keyword usage and density
-       - Content readability scores
-       - Content structure and formatting
-       - Media usage and optimization
-    
-    2. Using OffPageSEOAnalyzer, examine:
-       - External linking patterns
-       - Social media presence
-       - Brand visibility metrics
-    
-    3. Using ReferringDomainAnalyzer, check:
-       - Quality of referring domains
-       - Context of references
-       - Authority of sources
-
-optimization:
-  description: >
-    Based on the technical and content analysis of {website_url}, provide optimization recommendations.
-    
-    1. Using SubpageAnalyzer, identify:
-       - Top performing pages
-       - Pages needing improvement
-       - Content gaps
-       - Internal linking opportunities
-    
-    2. Create an action plan for:
-       - Technical improvements
-       - Content enhancements
-       - Link profile optimization
-       - User experience improvements
-    
-    3. Prioritize recommendations by:
-       - Impact potential
-       - Implementation effort
-       - Expected ROI

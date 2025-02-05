@@ -40,6 +40,9 @@ class LoadingTimeTracker(BaseTool):
     def _run(self, website_url: str, samples: int = 3) -> str:
         """Runs the loading time analysis"""
         try:
+            # Reduce samples for faster analysis
+            samples = min(samples, 10)  # Maximum 2 samples instead of 3
+            
             # Clean up URL
             website_url = website_url.strip('"')
             if not website_url.startswith(('http://', 'https://')):
@@ -64,8 +67,8 @@ class LoadingTimeTracker(BaseTool):
                     payload = {
                         'url': website_url,
                         'gotoOptions': {
-                            'waitUntil': 'networkidle0',
-                            'timeout': 30000
+                            'waitUntil': 'domcontentloaded',
+                            'timeout': 15000
                         }
                     }
 
@@ -73,7 +76,7 @@ class LoadingTimeTracker(BaseTool):
                         scrape_url,
                         json=payload,
                         headers={'Content-Type': 'application/json'},
-                        timeout=45
+                        timeout=20
                     )
 
                     if response.status_code == 200:
@@ -82,7 +85,7 @@ class LoadingTimeTracker(BaseTool):
                         load_times.append(load_time)
                         total_sizes.append(len(response.content) / (1024 * 1024))  # Size in MB
                         
-                    time.sleep(2)  # Wait between samples
+                    time.sleep(1)  # Reduced from 2
                     
                 except Exception as e:
                     print(f"Error in sample {i + 1}: {str(e)}")

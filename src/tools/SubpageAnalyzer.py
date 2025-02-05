@@ -87,31 +87,38 @@ class SubpageAnalyzer(BaseTool):
         browserless_api_key = os.getenv('BROWSERLESS_API_KEY')
         scrape_url = f'https://chrome.browserless.io/content?token={browserless_api_key}'
         
-        while to_crawl and len(found_pages) < max_pages:
+        # Add error handling for rate limits
+        retry_count = 0
+        max_retries = 3
+        
+        while to_crawl and len(found_pages) < max_pages and retry_count < max_retries:
             try:
                 url = to_crawl.pop()
                 if url in crawled:
                     continue
                 
-                # Configure browserless request
                 payload = {
                     'url': url,
                     'gotoOptions': {
-                        'waitUntil': 'networkidle0',
-                        'timeout': 30000
+                        'waitUntil': 'domcontentloaded',
+                        'timeout': 20000
                     }
                 }
                 
                 response = requests.post(
                     scrape_url,
                     json=payload,
-                    headers={
-                        'Content-Type': 'application/json',
-                        'Cache-Control': 'no-cache'
-                    },
-                    timeout=45
+                    headers={'Content-Type': 'application/json'},
+                    timeout=25
                 )
                 
+                if response.status_code == 429:  # Rate limit
+                    print("Rate limit hit, waiting...")
+                    time.sleep(2)
+                    to_crawl.add(url)  # Put URL back in queue
+                    retry_count += 1
+                    continue
+                    
                 if response.status_code == 200:
                     soup = BeautifulSoup(response.text, 'html.parser')
                     
@@ -128,13 +135,14 @@ class SubpageAnalyzer(BaseTool):
                                 to_crawl.add(full_url)
                                 
                     crawled.add(url)
-                    time.sleep(1)  # Be nice to servers
-                    
+                    time.sleep(1)  # Rate limiting
+                
             except Exception as e:
                 print(f"Error crawling {url}: {str(e)}")
+                retry_count += 1
                 continue
                 
-        return list(found_pages)
+        return list(found_pages)[:max_pages]  # Ensure we don't exceed max_pages
 
     def _calculate_authority_score(self, domains: set) -> float:
         """Calculates domain authority score"""

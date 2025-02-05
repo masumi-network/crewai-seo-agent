@@ -20,9 +20,9 @@ from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from html.parser import HTMLParser
-from tools.OffPageSEOAnalyzer import OffPageSEOAnalyzer
 from tools.SubpageAnalyzer import SubpageAnalyzer
 from tools.BrowserlessScraper import BrowserlessScraper
+from concurrent.futures import ThreadPoolExecutor
 
 # Load environment variables
 load_dotenv()
@@ -60,7 +60,6 @@ class SEOAnalyseCrew():
         model='gpt-4o',  
         api_key=os.getenv('OPENAI_API_KEY'),
         max_retries=3,
-        request_timeout=60,
         temperature=0.5
     )
 
@@ -75,7 +74,6 @@ class SEOAnalyseCrew():
                 BrowserlessScraper(),
                 LoadingTimeTracker(),
                 MobileOptimizationTool(),
-                OffPageSEOAnalyzer(),
                 SubpageAnalyzer(),
             ],
             verbose=True,

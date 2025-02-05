@@ -34,32 +34,22 @@ class BrowserlessScraper(BaseTool):
             if not website_url.startswith(('http://', 'https://')):
                 website_url = 'https://' + website_url
 
-            # Get browserless API key
-            browserless_api_key = os.getenv('BROWSERLESS_API_KEY')
-            if not browserless_api_key:
-                return "Error: BROWSERLESS_API_KEY not found in environment variables"
-
-            # Configure scraping request
-            scrape_url = f'https://chrome.browserless.io/content?token={browserless_api_key}'
+            # Configure scraping request with shorter timeout
+            scrape_url = f'https://chrome.browserless.io/content?token={os.getenv("BROWSERLESS_API_KEY")}'
             
-            # Minimal payload format with longer timeout
             payload = {
                 'url': website_url,
                 'gotoOptions': {
-                    'waitUntil': 'networkidle0',
-                    'timeout': 30000  # 30 seconds for page load
+                    'waitUntil': 'domcontentloaded',  # Changed from networkidle0 for faster loading
+                    'timeout': 15000  # Reduced from 30000
                 }
             }
 
-            # Make request to browserless with increased timeout
             response = requests.post(
                 scrape_url,
                 json=payload,
-                headers={
-                    'Content-Type': 'application/json',
-                    'Cache-Control': 'no-cache'
-                },
-                timeout=45  # 45 seconds total timeout
+                headers={'Content-Type': 'application/json'},
+                timeout=20  # Reduced from 45
             )
 
             if response.status_code != 200:
