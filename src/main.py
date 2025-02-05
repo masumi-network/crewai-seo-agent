@@ -53,6 +53,9 @@ def run():
     else:
         result = crew_instance  # New version
 
+def main():
+    run()
+
 # Run the analysis if this file is executed directly
 if __name__ == "__main__":
-    run()
+    main()
