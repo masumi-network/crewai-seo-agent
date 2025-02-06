@@ -4,113 +4,117 @@ An intelligent SEO analysis tool powered by crewAI that helps analyze and optimi
 
 ## Architecture
 
-- FastAPI web server for handling requests
 - RabbitMQ for message queuing
 - Worker processes for handling SEO analysis
 - Containerized with Docker
-- Deployable to Digital Ocean
+- Multiple AI agents working together
+- Scalable architecture for handling multiple requests
 
 ## Features
 
-### SEO Analysis
+### System Features
+- Queue-based processing
+- Scalable worker architecture
+- Containerized deployment
+- Error handling and retry logic
+- Distributed task processing
+
+### Data Collection
 - Meta tags analysis and extraction
-- Content structure analysis
+- Content structure analysis (headings, word count)
 - Link analysis (internal/external)
 - Image optimization check
 - Loading time measurements
 - Mobile optimization metrics
 - JavaScript-rendered content analysis
 
-### System Features
-- Queue-based processing
-- Scalable worker architecture
-- Containerized deployment
-- Health check endpoint
-- Error handling and retry logic
+### SEO Analysis
+- Technical SEO evaluation
+- Content quality assessment
+- Link profile analysis
+- Mobile compatibility scoring
+- Performance metrics
+- Keyword density analysis
+- Readability scoring
 
-## Prerequisites
+### Optimization
+- Prioritized improvement recommendations
+- Implementation timeline
+- Expected impact projections
+- ROI estimates
 
-- Docker and Docker Compose
-- Python 3.11+
+## Installation
+
+### Requirements
+- Python 3.10-3.13
 - Browserless.io API key
 - OpenAI API key
+- Docker and Docker Compose
 
-## Local Development Setup
-
+### Quick Start
 1. Clone the repository:
-bash
-git clone [repository-url]
+```bash
+git clone <repository-url>
 cd SEO-Agent
-
-
+```
 
 2. Create a `.env` file in the root directory:
-env
-OPENAI_API_KEY=your_openai_api_key_here
-BROWSERLESS_API_KEY=your_browserless_api_key_here
-
+```env
+OPENAI_API_KEY=your_openai_api_key
+BROWSERLESS_API_KEY=your_browserless_api_key
+RABBITMQ_USER=user
+RABBITMQ_PASS=password
+```
 
 3. Build and run with Docker Compose:
-bash
-docker-compose up --build
+```bash
+docker-compose build
+docker-compose up
+```
 
 This will start:
-- Web server on port 8000
 - RabbitMQ on port 5672 (management interface on 15672)
-- Worker process(s)
+- Worker process(es)
+- Web service
 
-## API Usage
-
-### Request SEO Analysis
-bash
-curl -X POST http://localhost:8000/analyze \
--H "Content-Type: application/json" \
--d '{"website_url": "https://example.com"}'
-
-
-
-### Check Health
-
-bash
-curl http://localhost:8000/health
-
-
-## Digital Ocean Deployment
-
-1. Fork this repository to your GitHub account
-
-2. Create a new app on Digital Ocean:
-   - Go to Digital Ocean dashboard
-   - Click "Create" → "Apps"
-   - Select your GitHub repository
-   - Configure environment variables:
-     - `OPENAI_API_KEY`
-     - `BROWSERLESS_API_KEY`
-
-3. Deploy the application:
-   - Digital Ocean will automatically deploy the web service and worker
-   - RabbitMQ will be provisioned as a managed database
-
+## Project Structure
+```
+SEO-Agent/
+├── src/
+│   ├── config/
+│   │   ├── agents.yaml    # Agent configurations
+│   │   └── tasks.yaml     # Task definitions
+│   ├── tools/             # Custom SEO analysis tools
+│   ├── crew.py           # Main crew implementation
+│   ├── main.py           # Entry point
+│   └── worker.py         # Worker implementation
+├── docker-compose.yml
+├── Dockerfile
+└── requirements.txt
+```
 
 ## Monitoring
 
 ### RabbitMQ Management Interface
-- Local: http://localhost:15672
-- Credentials: user/password
+- Access at: http://localhost:15672
+- Default credentials: user/password
 
 ### Worker Logs
-
+```bash
 docker-compose logs -f worker
+```
 
+### BrowserlessScraper
+- Extracts meta tags, headings, links, and images
+- Analyzes content structure
+- Counts keywords and calculates density
+- Handles JavaScript-rendered content
+- Provides readability metrics
 
-On Digital Ocean:
-- Adjust the number of worker instances in the app dashboard
-
-## Troubleshooting
-
-1. If the web server fails to start:
+1. If services fail to start:
    - Check if RabbitMQ is running
    - Verify environment variables
+   - Ensure config files are in the correct location
 
 2. If analysis fails:
    - Check worker logs
@@ -122,17 +126,20 @@ On Digital Ocean:
    - Check for worker errors
    - Monitor RabbitMQ dashboard
 
-## Contributing
+## Output
 
-1. Fork the repository
-2. Create a feature branch
-3. Commit your changes
-4. Push to the branch
-5. Create a Pull Request
+The analysis generates a detailed report in PDF format containing:
 
-## License
+1. Technical Analysis
+   - Meta tag inventory
+   - Content structure
+   - Link profile
+   - Performance metrics
 
-MIT License
+2. Content Analysis
+   - Keyword density
+   - Readability scores
+   - Content structure
 
 ## Acknowledgments
 

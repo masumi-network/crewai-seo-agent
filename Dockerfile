@@ -1,30 +1,14 @@
-FROM python:3.11-slim
-
-# Install Chrome and dependencies
-RUN apt-get update && apt-get install -y \
-    wget \
-    gnupg \
-    chromium \
-    chromium-driver \
-    && rm -rf /var/lib/apt/lists/*
+FROM python:3.10
 
 WORKDIR /app
 
-# Copy requirements first for better caching
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt && \
+    pip install --no-cache-dir pika==1.3.1
 
-# Copy the rest of the application
+# Create config directory
+RUN mkdir -p /app/config
+
 COPY . .
 
-# Create necessary directories
-RUN mkdir -p src/venv
-
-# Set environment variables
-ENV PYTHONPATH=/app/src
-ENV PATH="/app/src/venv/bin:$PATH"
-ENV CHROME_BIN=/usr/bin/chromium
-ENV CHROMEDRIVER_PATH=/usr/bin/chromedriver
-
-# Run the application
 CMD ["python", "src/main.py"] 

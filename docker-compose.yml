@@ -9,8 +9,14 @@ services:
       - RABBITMQ_HOST=rabbitmq
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - BROWSERLESS_API_KEY=${BROWSERLESS_API_KEY}
+      - WEBSITE_URL=https://example.com
+      - RABBITMQ_DEFAULT_USER=user
+      - RABBITMQ_DEFAULT_PASS=password
     depends_on:
       - rabbitmq
+    volumes:
+      - .:/app
+      - ./src/config:/app/config
 
   rabbitmq:
     image: rabbitmq:3-management
@@ -28,5 +34,10 @@ services:
       - RABBITMQ_HOST=rabbitmq
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - BROWSERLESS_API_KEY=${BROWSERLESS_API_KEY}
+      - RABBITMQ_DEFAULT_USER=user
+      - RABBITMQ_DEFAULT_PASS=password
     depends_on:
-      - rabbitmq 
+      - rabbitmq
+    volumes:
+      - .:/app
+      - ./src/config:/app/config 
