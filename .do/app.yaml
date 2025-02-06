@@ -1,0 +1,36 @@
+name: seo-analysis-agent
+services:
+  - name: web
+    github:
+      branch: main
+      deploy_on_push: true
+      repo: your-username/SEO-Agent
+    build_command: pip install -r requirements.txt
+    run_command: uvicorn src.api:app --host 0.0.0.0 --port 8000
+    envs:
+      - key: OPENAI_API_KEY
+        type: SECRET
+      - key: BROWSERLESS_API_KEY
+        type: SECRET
+      - key: RABBITMQ_HOST
+        value: ${rabbitmq.HOSTNAME}
+
+  - name: worker
+    github:
+      branch: main
+      deploy_on_push: true
+      repo: your-username/SEO-Agent
+    build_command: pip install -r requirements.txt
+    run_command: python src/worker.py
+    envs:
+      - key: OPENAI_API_KEY
+        type: SECRET
+      - key: BROWSERLESS_API_KEY
+        type: SECRET
+      - key: RABBITMQ_HOST
+        value: ${rabbitmq.HOSTNAME}
+
+databases:
+  - name: rabbitmq
+    engine: RABBITMQ
+    version: "3.11" 

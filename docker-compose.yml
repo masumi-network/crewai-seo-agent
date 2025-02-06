@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - RABBITMQ_HOST=rabbitmq
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - BROWSERLESS_API_KEY=${BROWSERLESS_API_KEY}
+    depends_on:
+      - rabbitmq
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      - RABBITMQ_DEFAULT_USER=user
+      - RABBITMQ_DEFAULT_PASS=password
+
+  worker:
+    build: .
+    command: python src/worker.py
+    environment:
+      - RABBITMQ_HOST=rabbitmq
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - BROWSERLESS_API_KEY=${BROWSERLESS_API_KEY}
+    depends_on:
+      - rabbitmq 
