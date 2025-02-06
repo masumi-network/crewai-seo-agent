@@ -39,6 +39,12 @@ This project uses AI agents via crewAI to perform comprehensive SEO analysis and
 - Browserless.io API key
 - OpenAI API key
 
+### Usage 
+source venv/bin/activate
+cd src
+python main.py
+
+
 ### Dependencies
 Required packages:
 
