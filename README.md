@@ -8,29 +8,37 @@ This project uses AI agents via crewAI to perform comprehensive SEO analysis and
 
 ## Features
 
-### Data Collection
-- Meta tags analysis and extraction
-- Content structure analysis (headings, word count)
-- Link analysis (internal/external)
-- Image optimization check
+### Data Collection & Analysis
+- Meta tags and SEO elements analysis
+- Content structure analysis (headings h1-h6)
+- Keyword frequency and density analysis
+- Internal and external link mapping
+- Mobile compatibility testing
 - Loading time measurements
-- Mobile optimization metrics
 - JavaScript-rendered content analysis
 
-### Analysis
-- Technical SEO evaluation
-- Content quality assessment
-- Link profile analysis
-- Mobile compatibility scoring
-- Performance metrics
-- Keyword density analysis
-- Readability scoring
+### Generated Report Sections
+1. Priority Issues
+   - Current metrics vs Target goals
+   - Prioritized improvement areas
+   - Specific recommendations
 
-### Optimization
-- Prioritized improvement recommendations
-- Implementation timeline
-- Expected impact projections
-- ROI estimates
+2. Impact Forecast
+   - Load time reduction estimates
+   - SEO score increase projections
+   - User engagement predictions
+
+3. Key Statistics
+   - Average load times
+   - Most used meta tags
+   - Mobile compatibility scores
+   - Keyword frequency analysis
+   - Top performing subpages
+
+4. Page-Specific Optimizations
+   - High-priority pages analysis
+   - Content gap identification
+   - Structure enhancement recommendations
 
 ## Installation
 
@@ -43,101 +51,63 @@ This project uses AI agents via crewAI to perform comprehensive SEO analysis and
 source venv/bin/activate
 cd src
 python main.py
+Run the full crew analysis: python main.py
+Test just the PDF conversion: python main.py --test-pdf
 
-
-### Dependencies
-Required packages:
-
+2. Install dependencies:
+```bash
 pip install -r requirements.txt
+```
 
-Required packages:
-- crewai>=0.79.4
-- beautifulsoup4
-- requests
-- python-dotenv
-- pydantic
-- openai
-- PyYAML
-- mdpdf
-
-### Environment Setup
-1. Create a `.env` file in the root directory
-2. Add your API keys:
-
-env
+3. Create `.env` file with API keys:
+```env
 OPENAI_API_KEY=your_openai_api_key_here
 BROWSERLESS_API_KEY=your_browserless_api_key_here
+```
 
+### Usage
+```bash
+cd src
+python main.py  # Run full analysis
+python main.py --test-pdf  # Test PDF generation only
+```
 
-## Tools Description
+## Output
+
+The tool generates two files:
+1. `report.md` - Raw markdown report
+2. `seo_report-{domain}.pdf` - Formatted PDF report with:
+   - Professional styling
+   - Data tables
+   - Metric visualizations
+   - Actionable recommendations
+
+## Tools
 
 ### BrowserlessScraper
-- Extracts meta tags, headings, links, and images
+- Extracts meta tags, headings, links
 - Analyzes content structure
-- Counts keywords and calculates density
 - Handles JavaScript-rendered content
-- Provides readability metrics
-
-### LoadingTimeTracker
-- Measures page load times using browserless
-- Takes multiple samples
-- Calculates average, min, and max load times
-- Measures page size
-- Provides performance ratings
-
-### OffPageSEOAnalyzer
-- Analyzes external link profile
-- Checks social media presence
-- Measures brand visibility
-- Evaluates content distribution
-- Uses browserless for reliable data collection
 
 ### SubpageAnalyzer
 - Crawls website subpages
 - Analyzes content quality
 - Measures user engagement signals
-- Ranks pages by importance
-- Uses browserless for JavaScript support
 
-## Output
+### MobileTesting
+- Tests mobile compatibility
+- Checks responsive design
+- Validates mobile performance
 
-The analysis generates a detailed report in `seo_report-{domain}` containing:
-
-1. Technical Analysis
-   - Meta tag inventory
-   - Content structure
-   - Link profile
-   - Performance metrics
-   - Mobile optimization scores
-   - JavaScript-rendered content analysis
-
-2. Content Analysis
-   - Keyword density
-   - Readability scores
-   - Content structure
-   - Media optimization
-
-3. Off-Page Analysis
-   - External link profile
-   - Social media presence
-   - Brand visibility
-   - Content distribution
-
-4. Recommendations
-   - Priority fixes
-   - Expected improvements
-   - Implementation timeline
-
-## Benefits of Browserless Integration
-- Reliable JavaScript rendering
-- Better handling of modern web apps
-- Consistent performance
-- Scalable solution
-- Proxy management
-- Better error handling
+## Benefits
+- Comprehensive SEO analysis
+- Professional PDF reports
+- Actionable recommendations
+- Reliable web scraping
+- Mobile-first analysis
+- Modern web app support
 
 ## Acknowledgments
-
 - Built with [crewAI](https://github.com/joaomdmoura/crewAI)
-- Uses OpenAI's GPT-4 for analysis
-- Powered by [browserless.io](https://browserless.io) for web scraping
+- Uses OpenAI's GPT models
+- Powered by [browserless.io](https://browserless.io)

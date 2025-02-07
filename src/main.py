@@ -53,9 +53,18 @@ def run():
     else:
         result = crew_instance  # New version
 
+def test_pdf():
+    """Test function to convert markdown to PDF without running the crew"""
+    crew = SEOAnalyseCrew("test.com")
+    crew.test_pdf_conversion()
+
 def main():
     run()
 
 # Run the analysis if this file is executed directly
 if __name__ == "__main__":
-    main()
+    # Add command line argument handling
+    if len(sys.argv) > 1 and sys.argv[1] == "--test-pdf":
+        test_pdf()
+    else:
+        main()
