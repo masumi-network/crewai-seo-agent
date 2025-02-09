@@ -56,7 +56,7 @@ def run():
         sys.exit(1)
 
     # Example using environment variable:
-    website_url = os.getenv('WEBSITE_URL', 'https://example.com')
+    website_url = os.getenv('WEBSITE_URL', 'https://www.masumi.network/')
     
     # Continue with your existing logic
     connection = pika.BlockingConnection(

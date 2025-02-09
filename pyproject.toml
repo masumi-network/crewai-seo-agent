@@ -1,15 +1,24 @@
 [project]
-name = "seo-analyze-agent"
+name = "seo-agent"
 version = "0.1.0"
-description = "SEO Analysis Agent using crewAI"
-authors = [{ name = "Keanu Klestil", email = "keanu" }]
+description = "SEO Analysis Tool"
+authors = [{ name = "Keanu Klestil", email = "keanu.coms@gmail.com" }]
 requires-python = ">=3.10,<=3.13"
 dependencies = [
-    "crewai[tools]>=0.79.4,<1.0.0"
+    "crewai[tools]>=0.79.4",
+    "selenium",
+    "beautifulsoup4",
+    "requests",
+    "python-dotenv",
+    "pydantic",
+    "openai",
+    "PyYAML",
+    "markdown",
+    "reportlab"
 ]
 
 [project.scripts]
-seo_analyze = "src.main:run"
+seo-analyze = "src.main:main"
 run_crew = "src.main:run"
 train = "src.main:train"
 replay = "src.main:replay"
@@ -18,3 +27,8 @@ test = "src.main:test"
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
+
+[tool.pytest.ini_options]
+pythonpath = [
+    "src"
+]
