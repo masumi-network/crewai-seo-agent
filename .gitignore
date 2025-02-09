@@ -1,0 +1,10 @@
+.cursorrules
+venv/
+env/
+.env
+__pycache__/
+*.py[cod]
+*$py.class
+*.pdf
+report.md
+.env.local
