@@ -23,6 +23,8 @@ from html.parser import HTMLParser
 from tools.SubpageAnalyzer import SubpageAnalyzer
 from tools.BrowserlessScraper import BrowserlessScraper
 from concurrent.futures import ThreadPoolExecutor
+from utils.payment_handler import MasumiPaymentHandler
+import uuid
 
 # Load environment variables
 load_dotenv()
@@ -54,6 +56,9 @@ class SEOAnalyseCrew():
             'analyse_agent': self.analyse_agent(),
             'optimization_agent': self.optimization_agent()
         }
+        self.payment_handler = MasumiPaymentHandler()
+        self.job_id = str(uuid.uuid4())
+        self.payment_id = None
         super().__init__()
 
     # Configure GPT-4 with specific settings
@@ -837,3 +842,36 @@ class SEOAnalyseCrew():
             print(f"Error converting to PDF: {str(e)}")
             print(f"Error details: {str(e.__class__.__name__)}")
             print("The markdown file was still generated as 'report.md'")
+
+    async def start_analysis(self):
+        """Start the SEO analysis process with payment verification"""
+        try:
+            # Create payment request
+            payment_request = self.payment_handler.create_payment_request(
+                amount=50.0,  # Set your price
+                job_id=self.job_id
+            )
+            self.payment_id = payment_request['payment_id']
+            
+            # Wait for payment confirmation
+            payment_status = self.payment_handler.check_payment_status(self.payment_id)
+            if payment_status['status'] != 'completed':
+                raise Exception("Payment not completed")
+            
+            # Run the analysis
+            result = await self.run_analysis()
+            return {
+                'job_id': self.job_id,
+                'payment_id': self.payment_id,
+                'status': 'completed',
+                'result': result
+            }
+            
+        except Exception as e:
+            print(f"Error in analysis: {str(e)}")
+            return {
+                'job_id': self.job_id,
+                'payment_id': self.payment_id,
+                'status': 'failed',
+                'error': str(e)
+            }

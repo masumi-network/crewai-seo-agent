@@ -8,6 +8,10 @@ import openai
 import os
 import pika
 import time
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
+from typing import Optional
+import uvicorn
 
 # Ignore syntax warnings from the pysbd module
 warnings.filterwarnings("ignore", category=SyntaxWarning, module="pysbd")
@@ -90,3 +94,35 @@ def main():
 # Run the analysis if this file is executed directly
 if __name__ == "__main__":
     main()
+
+app = FastAPI()
+
+class AnalysisRequest(BaseModel):
+    website_url: str
+
+class JobStatus(BaseModel):
+    job_id: str
+    payment_id: Optional[str]
+    status: str
+    result: Optional[dict] = None
+
+@app.post("/start_job")
+async def start_job(request: AnalysisRequest):
+    try:
+        crew = SEOAnalyseCrew(request.website_url)
+        result = await crew.start_analysis()
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/status/{job_id}")
+async def get_status(job_id: str):
+    try:
+        crew = SEOAnalyseCrew("")  # Empty URL as we're just checking status
+        payment_status = crew.payment_handler.check_payment_status(job_id)
+        return payment_status
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=8000)
