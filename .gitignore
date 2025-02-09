@@ -1,8 +1,4 @@
-<<<<<<< HEAD
-.cursorrules
-=======
 # Virtual Environment
->>>>>>> 1b2d55b5f4e48b23a0791d144336163905e2b58b
 venv/
 env/
 .env
@@ -11,30 +7,10 @@ env/
 __pycache__/
 *.py[cod]
 *$py.class
-<<<<<<< HEAD
+
+# Output files
 *.pdf
 report.md
+
+# Local development
 .env.local
-=======
-.Python
-*.so
-
-# VS Code
-.vscode/
-
-# Distribution / packaging
-dist/
-build/
-*.egg-info/
-
-# Local development settings
-.env.local
-.env.*.local
-
-# Logs
-*.log
-
-# Reports and output files
-report.md
-*.pdf
->>>>>>> 1b2d55b5f4e48b23a0791d144336163905e2b58b
