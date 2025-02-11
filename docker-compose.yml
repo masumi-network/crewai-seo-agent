@@ -1,23 +1,6 @@
 version: '3.8'
 
 services:
-  web:
-    build: .
-    ports:
-      - "8000:8000"
-    environment:
-      - RABBITMQ_HOST=rabbitmq
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - BROWSERLESS_API_KEY=${BROWSERLESS_API_KEY}
-      - WEBSITE_URL=https://example.com
-      - RABBITMQ_DEFAULT_USER=user
-      - RABBITMQ_DEFAULT_PASS=password
-    depends_on:
-      - rabbitmq
-    volumes:
-      - .:/app
-      - ./src/config:/app/config
-
   rabbitmq:
     image: rabbitmq:3-management
     ports:
@@ -26,18 +9,47 @@ services:
     environment:
       - RABBITMQ_DEFAULT_USER=user
       - RABBITMQ_DEFAULT_PASS=password
+    healthcheck:
+      test: ["CMD", "rabbitmqctl", "status"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
 
   worker:
     build: .
-    command: python src/worker.py
+    command: python -m src.worker
     environment:
+      - PYTHONPATH=/app
       - RABBITMQ_HOST=rabbitmq
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - BROWSERLESS_API_KEY=${BROWSERLESS_API_KEY}
       - RABBITMQ_DEFAULT_USER=user
       - RABBITMQ_DEFAULT_PASS=password
     depends_on:
-      - rabbitmq
+      rabbitmq:
+        condition: service_healthy
     volumes:
       - .:/app
-      - ./src/config:/app/config 
+
+  web:
+    build: .
+    command: uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload
+    ports:
+      - "8000:8000"
+    environment:
+      - PYTHONPATH=/app
+      - RABBITMQ_HOST=rabbitmq
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - BROWSERLESS_API_KEY=${BROWSERLESS_API_KEY}
+      - RABBITMQ_DEFAULT_USER=user
+      - RABBITMQ_DEFAULT_PASS=password
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    volumes:
+      - .:/app
+
+volumes:
+  rabbitmq_data:  # Persistent volume for RabbitMQ data 

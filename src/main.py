@@ -3,7 +3,7 @@
 
 import sys
 import warnings
-from crew import SEOAnalyseCrew  # Imports the custom SEO analysis crew
+from src.crew import SEOAnalyseCrew  # Updated import path
 import openai
 import os
 import pika
@@ -12,6 +12,8 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from typing import Optional
 import uvicorn
+import json
+import uuid
 
 # Ignore syntax warnings from the pysbd module
 warnings.filterwarnings("ignore", category=SyntaxWarning, module="pysbd")
@@ -109,20 +111,46 @@ class JobStatus(BaseModel):
 @app.post("/start_job")
 async def start_job(request: AnalysisRequest):
     try:
-        crew = SEOAnalyseCrew(request.website_url)
-        result = await crew.start_analysis()
-        return result
+        # Create a connection to RabbitMQ
+        connection = pika.BlockingConnection(
+            pika.ConnectionParameters(
+                host='rabbitmq',
+                credentials=pika.PlainCredentials('user', 'password')
+            )
+        )
+        channel = connection.channel()
+        
+        # Declare queue
+        channel.queue_declare(queue='seo_tasks', durable=True)
+        
+        # Create job data
+        job_id = str(uuid.uuid4())
+        job_data = {
+            'website_url': request.website_url,
+            'job_id': job_id
+        }
+        
+        # Publish message
+        channel.basic_publish(
+            exchange='',
+            routing_key='seo_tasks',
+            body=json.dumps(job_data),
+            properties=pika.BasicProperties(
+                delivery_mode=2,  # make message persistent
+            )
+        )
+        
+        connection.close()
+        return {"job_id": job_id, "status": "queued"}
+        
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/status/{job_id}")
 async def get_status(job_id: str):
-    try:
-        crew = SEOAnalyseCrew("")  # Empty URL as we're just checking status
-        payment_status = crew.payment_handler.check_payment_status(job_id)
-        return payment_status
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    # For now, just return that the job is in progress
+    # You can implement actual status tracking later
+    return {"job_id": job_id, "status": "in_progress"}
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)

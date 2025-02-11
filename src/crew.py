@@ -10,8 +10,8 @@ import openai
 import os
 import yaml
 from crewai_tools import ScrapeWebsiteTool, SeleniumScrapingTool
-from tools.LoadingTimeTracker import LoadingTimeTracker
-from tools.MobileTesting import MobileOptimizationTool
+from src.tools.LoadingTimeTracker import LoadingTimeTracker
+from src.tools.MobileTesting import MobileOptimizationTool
 import markdown
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter
@@ -20,10 +20,10 @@ from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, Tabl
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from html.parser import HTMLParser
-from tools.SubpageAnalyzer import SubpageAnalyzer
-from tools.BrowserlessScraper import BrowserlessScraper
+from src.tools.SubpageAnalyzer import SubpageAnalyzer
+from src.tools.BrowserlessScraper import BrowserlessScraper
 from concurrent.futures import ThreadPoolExecutor
-from utils.payment_handler import MasumiPaymentHandler
+from src.utils.payment_handler import MasumiPaymentHandler
 import uuid
 
 # Load environment variables
@@ -382,7 +382,7 @@ class SEOAnalyseCrew():
             story = []
             
             # Add header with logo
-            logo_path = "image.png"
+            logo_path = "src/image.png"
             if os.path.exists(logo_path):
                 img = Image(logo_path)
                 img.drawHeight = 50
