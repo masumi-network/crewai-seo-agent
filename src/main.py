@@ -14,6 +14,7 @@ from typing import Optional
 import uvicorn
 import json
 import uuid
+import logging
 
 # Ignore syntax warnings from the pysbd module
 warnings.filterwarnings("ignore", category=SyntaxWarning, module="pysbd")
@@ -137,8 +138,22 @@ async def start_job(data: dict):
             "website_url": website_url
         }
 
-        connection, channel = get_rabbitmq_channel()
+        # Create a new connection for each request
+        connection = pika.BlockingConnection(
+            pika.ConnectionParameters(
+                host='rabbitmq',
+                credentials=pika.PlainCredentials(**RABBITMQ_CREDS),
+                heartbeat=600,
+                connection_attempts=5,
+                retry_delay=5
+            )
+        )
+        channel = connection.channel()
         
+        # Declare queue as durable
+        channel.queue_declare(queue=QUEUE_NAME, durable=True)
+        
+        # Publish message with persistent delivery mode
         channel.basic_publish(
             exchange='',
             routing_key=QUEUE_NAME,
@@ -149,10 +164,12 @@ async def start_job(data: dict):
             )
         )
         
+        # Close connection after publishing
         connection.close()
         return {"status": "Job started", "job_id": job_id}
         
     except Exception as e:
+        logger.error(f"Error starting job: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/status/{job_id}")

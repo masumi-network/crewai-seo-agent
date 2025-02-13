@@ -16,6 +16,8 @@ services:
       retries: 5
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - app_network
 
   worker:
     build: .
@@ -32,6 +34,9 @@ services:
         condition: service_healthy
     volumes:
       - .:/app
+    networks:
+      - app_network
+    restart: unless-stopped
 
   web:
     build: .
@@ -50,6 +55,13 @@ services:
         condition: service_healthy
     volumes:
       - .:/app
+    networks:
+      - app_network
+    restart: unless-stopped
+
+networks:
+  app_network:
+    driver: bridge
 
 volumes:
   rabbitmq_data:  # Persistent volume for RabbitMQ data 

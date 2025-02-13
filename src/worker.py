@@ -38,7 +38,7 @@ async def process_seo_analysis(website_url, job_id):
     try:
         logger.info(f"Starting SEO analysis for {website_url} (Job ID: {job_id})")
         crew = SEOAnalyseCrew(website_url)
-        result = await crew.start_analysis()
+        result = await crew.run_analysis()
         logger.info(f"Analysis completed for {website_url}")
         return result
     except Exception as e:
@@ -55,10 +55,9 @@ def callback(ch, method, properties, body):
         website_url = job_data.get('website_url')
         job_id = job_data.get('job_id')
         
-        logger.info(f"Processing job {job_id} for URL: {website_url}")
-        
         if not website_url:
             logger.error("No website URL in message")
+            ch.basic_ack(delivery_tag=method.delivery_tag)
             return
 
         # Create new event loop for this callback
@@ -70,17 +69,15 @@ def callback(ch, method, properties, body):
             logger.info(f"Analysis result for {website_url}: {result}")
         finally:
             loop.close()
+            
+        # Acknowledge message after successful processing
+        ch.basic_ack(delivery_tag=method.delivery_tag)
         
     except Exception as e:
         logger.error(f"Error processing message: {str(e)}")
         logger.error(traceback.format_exc())
-    finally:
-        try:
-            # Always acknowledge the message
-            ch.basic_ack(delivery_tag=method.delivery_tag)
-            logger.info(f"Acknowledged message for job {job_id}")
-        except Exception as e:
-            logger.error(f"Error acknowledging message: {str(e)}")
+        # Acknowledge message even on error to prevent infinite retries
+        ch.basic_ack(delivery_tag=method.delivery_tag)
 
 def main():
     """Main worker function"""

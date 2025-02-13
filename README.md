@@ -1,114 +1,43 @@
-# SEO Analysis Agent with Masumi Payment Integration
+# SEO Analysis Agent
 
-An intelligent SEO analysis tool powered by crewAI that helps analyze and optimize website content using browserless.io for reliable web scraping. This version includes Masumi payment integration for handling service payments.
+An AI-powered SEO analysis tool that provides comprehensive website optimization insights using multiple specialized agents.
 
-## Architecture
+## Project Overview
 
-- RabbitMQ for message queuing
-- Worker processes for handling SEO analysis
-- Containerized with Docker
-- Multiple AI agents working together
-- Scalable architecture for handling multiple requests
+This project is an SEO agent designed to analyze and optimize websites for better search engine performance. The agent utilizes various tools to collect and analyze data, providing detailed reports on different aspects of the website's SEO. The primary tools include:
 
-## Features
+1. **BrowserlessScraper**: Scrapes website content and analyzes meta tags, SEO elements, content structure, keyword frequency, link mapping, and media inventory.
+2. **SubpageAnalyzer**: Analyzes page crawl and indexing status, content quality, user engagement metrics, internal linking patterns, page authority, and JavaScript-rendered content.
+3. **LoadingTimeTracker**: Performs page load timing analysis, resource loading sequences, performance bottlenecks, network request patterns, page size measurements, and performance ratings.
+4. **MobileTesting**: Evaluates viewport configuration, mobile responsiveness, touch element spacing, font size accessibility, content scaling, mobile-friendly images, media query implementation, mobile performance metrics, and user experience factors.
 
-### System Features
-- Queue-based processing
-- Scalable worker architecture
-- Containerized deployment
-- Error handling and retry logic
-- Distributed task processing
+## Tech Stack
 
-### Data Collection
-- Meta tags analysis and extraction
-- Content structure analysis (headings, word count)
-- Link analysis (internal/external)
-- Image optimization check
-- Loading time measurements
-- Mobile optimization metrics
-- JavaScript-rendered content analysis
-
-### SEO Analysis
-- Technical SEO evaluation
-- Content quality assessment
-- Link profile analysis
-- Mobile compatibility scoring
-- Performance metrics
-- Keyword density analysis
-- Readability scoring
-
-### Optimization
-- Prioritized improvement recommendations
-- Implementation timeline
-- Expected impact projections
-- ROI estimates
-
-### Payment Integration
-- Secure payment processing via Masumi Network
-- Payment status verification
-- Job tracking with unique IDs
-- Automated payment flow
-
-### Report Generation
-- Detailed PDF reports
-- Priority issues identification
-- Impact forecasting
-- Key statistics compilation
-- Page-specific optimizations
+1. **Python**: Primary programming language (version 3.10-3.13)
+2. **crewai**: AI agent development library (version 0.79.4 or higher, < 1.0.0)
+3. **FastAPI**: Web framework for API endpoints
+4. **Browserless.io**: Web scraping service
+5. **OpenAI**: GPT models for analysis
+6. **Docker**: Containerization
+7. **YAML**: Configuration files
+8. **ReportLab**: PDF report generation
+9. **Uvicorn**: ASGI server
+10. **RabbitMQ**: Message queue for job processing
 
 ## API Endpoints
 
-### Start Analysis Job
-```http
-POST /start_job
-Content-Type: application/json
+1. **Start Analysis**:
+   ```http
+   POST /start_job
+   {
+       "website_url": "https://example.com"
+   }
+   ```
 
-{
-    "website_url": "https://example.com"
-}
-```
-
-### Check Job Status
-```http
-GET /status/{job_id}
-```
-
-## Installation
-
-### Requirements
-- Python 3.10-3.13
-- Browserless.io API key
-- OpenAI API key
-- Masumi Payment API key
-- Docker and Docker Compose
-
-### Quick Start
-1. Clone the repository:
-```bash
-git clone <repository-url>
-cd SEO-Agent
-```
-
-2. Create a `.env` file in the root directory:
-```env
-OPENAI_API_KEY=your_openai_api_key
-BROWSERLESS_API_KEY=your_browserless_api_key
-RABBITMQ_USER=user
-RABBITMQ_PASS=password
-PAYMENT_SERVICE_URL=your_masumi_payment_service_url
-PAYMENT_API_KEY=your_masumi_api_key
-```
-
-3. Build and run with Docker Compose:
-```bash
-docker-compose build
-docker-compose up
-```
-
-This will start:
-- RabbitMQ on port 5672 (management interface on 15672)
-- Worker process(es)
-- Web service
+2. **Check Status**:
+   ```http
+   GET /status/{job_id}
+   ```
 
 ## Project Structure
 ```
