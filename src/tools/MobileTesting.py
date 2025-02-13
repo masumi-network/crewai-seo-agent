@@ -10,7 +10,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from typing import Dict, Optional, Type
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from selenium.common.exceptions import TimeoutException
 
 # Define input schema for the mobile testing tool
@@ -27,6 +27,9 @@ class MobileOptimizationTool(BaseTool):
     - Responsive images
     """
     
+    # Allow arbitrary types in the model
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+    
     # Tool metadata
     name: str = Field(default="Mobile Optimization Tester", description="Name of the tool")
     description: str = Field(
@@ -34,10 +37,22 @@ class MobileOptimizationTool(BaseTool):
         description="Description of what the tool does"
     )
     args_schema: Type[BaseModel] = Field(default=MobileTestingInput, description="Schema for the tool's arguments")
+    chrome_options: Options = Field(default_factory=lambda: Options(), description="Chrome browser options")
 
     def __init__(self):
         """Initialize the tool"""
         super().__init__()
+        # Set up Chrome options for headless testing
+        self.chrome_options = Options()
+        mobile_emulation = {
+            "deviceName": "iPhone X"
+        }
+        self.chrome_options.add_experimental_option("mobileEmulation", mobile_emulation)
+        self.chrome_options.add_argument('--headless')  # Run in background
+        self.chrome_options.add_argument('--no-sandbox')  # Bypass OS security
+        self.chrome_options.add_argument('--disable-dev-shm-usage')  # Handle limited resources
+        self.chrome_options.add_argument('--disable-gpu')
+        self.chrome_options.add_argument('--ignore-certificate-errors')
 
     def _run(self, url: str) -> str:
         """
@@ -54,23 +69,9 @@ class MobileOptimizationTool(BaseTool):
             url = 'https://' + url
 
         try:
-            # Configure Chrome to emulate iPhone X
-            mobile_emulation = {
-                "deviceName": "iPhone X"
-            }
-            
-            # Set up Chrome options for headless testing
-            options = webdriver.ChromeOptions()
-            options.add_experimental_option("mobileEmulation", mobile_emulation)
-            options.add_argument('--headless')  # Run in background
-            options.add_argument('--no-sandbox')  # Bypass OS security
-            options.add_argument('--disable-dev-shm-usage')  # Handle limited resources
-            options.add_argument('--disable-gpu')
-            options.add_argument('--ignore-certificate-errors')
-            
-            # Initialize Chrome driver
+            # Initialize Chrome driver with pre-configured options
             service = webdriver.ChromeService()
-            driver = webdriver.Chrome(service=service, options=options)
+            driver = webdriver.Chrome(service=service, options=self.chrome_options)
             
             # Load the webpage
             driver.get(url)
@@ -165,3 +166,4 @@ Recommendations:
     async def _arun(self, url: str) -> Dict:
         """Async version - not implemented"""
         raise NotImplementedError("Async not implemented")
+    

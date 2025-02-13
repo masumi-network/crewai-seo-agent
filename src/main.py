@@ -18,6 +18,10 @@ import uuid
 # Ignore syntax warnings from the pysbd module
 warnings.filterwarnings("ignore", category=SyntaxWarning, module="pysbd")
 
+app = FastAPI()
+QUEUE_NAME = 'seo_tasks'
+RABBITMQ_CREDS = {'username': 'user', 'password': 'password'}
+
 def check_openai_connection():
     """
     Tests the connection to OpenAI's API by making a small test request.
@@ -97,8 +101,6 @@ def main():
 if __name__ == "__main__":
     main()
 
-app = FastAPI()
-
 class AnalysisRequest(BaseModel):
     website_url: str
 
@@ -108,48 +110,54 @@ class JobStatus(BaseModel):
     status: str
     result: Optional[dict] = None
 
-@app.post("/start_job")
-async def start_job(request: AnalysisRequest):
-    try:
-        # Create a connection to RabbitMQ
-        connection = pika.BlockingConnection(
-            pika.ConnectionParameters(
-                host='rabbitmq',
-                credentials=pika.PlainCredentials('user', 'password')
-            )
+def get_rabbitmq_channel():
+    """Establishes connection to RabbitMQ and returns channel"""
+    connection = pika.BlockingConnection(
+        pika.ConnectionParameters(
+            host='rabbitmq',
+            credentials=pika.PlainCredentials(**RABBITMQ_CREDS),
+            heartbeat=600
         )
-        channel = connection.channel()
-        
-        # Declare queue
-        channel.queue_declare(queue='seo_tasks', durable=True)
-        
-        # Create job data
+    )
+    channel = connection.channel()
+    channel.queue_declare(queue=QUEUE_NAME, durable=True)
+    return connection, channel
+
+@app.post("/start_job")
+async def start_job(data: dict):
+    """Starts a new SEO analysis job"""
+    try:
+        website_url = data.get("website_url")
+        if not website_url:
+            raise HTTPException(status_code=400, detail="website_url is required")
+
         job_id = str(uuid.uuid4())
         job_data = {
-            'website_url': request.website_url,
-            'job_id': job_id
+            "job_id": job_id,
+            "website_url": website_url
         }
+
+        connection, channel = get_rabbitmq_channel()
         
-        # Publish message
         channel.basic_publish(
             exchange='',
-            routing_key='seo_tasks',
+            routing_key=QUEUE_NAME,
             body=json.dumps(job_data),
             properties=pika.BasicProperties(
                 delivery_mode=2,  # make message persistent
+                content_type='application/json'
             )
         )
         
         connection.close()
-        return {"job_id": job_id, "status": "queued"}
+        return {"status": "Job started", "job_id": job_id}
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/status/{job_id}")
 async def get_status(job_id: str):
-    # For now, just return that the job is in progress
-    # You can implement actual status tracking later
+    """Gets the status of a job"""
     return {"job_id": job_id, "status": "in_progress"}
 
 if __name__ == "__main__":
