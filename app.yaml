@@ -10,7 +10,7 @@ services:
     run_command: uvicorn src.service:app --host 0.0.0.0 --port $PORT
     envs:
       - key: PYTHONPATH
-        value: /app/src
+        value: ${APP_DIR}
       - key: OPENAI_API_KEY
         type: SECRET
       - key: BROWSERLESS_API_KEY
