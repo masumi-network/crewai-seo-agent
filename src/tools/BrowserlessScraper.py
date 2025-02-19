@@ -40,8 +40,8 @@ class BrowserlessScraper(BaseTool):
             payload = {
                 'url': website_url,
                 'gotoOptions': {
-                    'waitUntil': 'domcontentloaded',  # Changed from networkidle0 for faster loading
-                    'timeout': 15000  # Reduced from 30000
+                    'waitUntil': 'domcontentloaded',  # Changed from networkidle0
+                    'timeout': 10000  # 10 seconds timeout
                 }
             }
 
@@ -49,7 +49,7 @@ class BrowserlessScraper(BaseTool):
                 scrape_url,
                 json=payload,
                 headers={'Content-Type': 'application/json'},
-                timeout=20  # Reduced from 45
+                timeout=15  # 15 seconds total timeout
             )
 
             if response.status_code != 200:

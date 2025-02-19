@@ -6,38 +6,39 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - RABBITMQ_HOST=rabbitmq
+      - PYTHONPATH=/app/src
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - BROWSERLESS_API_KEY=${BROWSERLESS_API_KEY}
-      - WEBSITE_URL=https://example.com
-      - RABBITMQ_DEFAULT_USER=user
-      - RABBITMQ_DEFAULT_PASS=password
+      - POSTGRES_HOST=postgres
+      - POSTGRES_DB=seo_analysis
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_USER=user
+      - RABBITMQ_PASS=password
+    command: uvicorn src.service:app --host 0.0.0.0 --port 8000 --reload
     depends_on:
+      - postgres
       - rabbitmq
+
+  postgres:
+    image: postgres:13
+    environment:
+      - POSTGRES_DB=seo_analysis
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
     volumes:
-      - .:/app
-      - ./src/config:/app/config
+      - postgres_data:/var/lib/postgresql/data
+      - ./src/db/schema.sql:/docker-entrypoint-initdb.d/schema.sql
 
   rabbitmq:
     image: rabbitmq:3-management
+    environment:
+      - RABBITMQ_DEFAULT_USER=user
+      - RABBITMQ_DEFAULT_PASS=password
     ports:
       - "5672:5672"
       - "15672:15672"
-    environment:
-      - RABBITMQ_DEFAULT_USER=user
-      - RABBITMQ_DEFAULT_PASS=password
 
-  worker:
-    build: .
-    command: python src/worker.py
-    environment:
-      - RABBITMQ_HOST=rabbitmq
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - BROWSERLESS_API_KEY=${BROWSERLESS_API_KEY}
-      - RABBITMQ_DEFAULT_USER=user
-      - RABBITMQ_DEFAULT_PASS=password
-    depends_on:
-      - rabbitmq
-    volumes:
-      - .:/app
-      - ./src/config:/app/config 
+volumes:
+  postgres_data: 

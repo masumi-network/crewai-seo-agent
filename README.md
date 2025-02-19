@@ -1,149 +1,225 @@
 # SEO Analysis Agent with Queue System
 
-An intelligent SEO analysis tool powered by crewAI that helps analyze and optimize website content using browserless.io for reliable web scraping. This version includes a RabbitMQ queue system for handling multiple analysis requests.
+A powerful, distributed SEO analysis system powered by AI agents that provides comprehensive website analysis and optimization recommendations. Built with crewAI, this system uses browserless.io for reliable web scraping and includes a RabbitMQ queue system for handling multiple concurrent analysis requests.
 
-## Architecture
+## Key Features
 
-- RabbitMQ for message queuing
-- Worker processes for handling SEO analysis
-- Containerized with Docker
-- Multiple AI agents working together
-- Scalable architecture for handling multiple requests
+### Intelligent Multi-Agent System
+- **SEO Technical Auditor**: Collects and analyzes technical SEO metrics
+- **Analytics Specialist**: Processes data and uncovers optimization opportunities
+- **Strategy Expert**: Develops actionable improvement recommendations
 
-## Features
+### Comprehensive Analysis
+- **Technical SEO**
+  - Meta tag analysis and optimization
+  - Site structure evaluation
+  - Mobile responsiveness testing
+  - Page load speed analysis
+  - JavaScript rendering assessment
 
-### System Features
-- Queue-based processing
-- Scalable worker architecture
-- Containerized deployment
-- Error handling and retry logic
-- Distributed task processing
+- **Content Analysis**
+  - Keyword density and relevance
+  - Content structure and readability
+  - Heading hierarchy analysis
+  - Image optimization check
+  - Internal/external link analysis
 
-### Data Collection
-- Meta tags analysis and extraction
-- Content structure analysis (headings, word count)
-- Link analysis (internal/external)
-- Image optimization check
-- Loading time measurements
-- Mobile optimization metrics
-- JavaScript-rendered content analysis
+- **Performance Metrics**
+  - Loading time measurements
+  - Mobile compatibility scoring
+  - User experience factors
+  - Resource optimization checks
 
-### SEO Analysis
-- Technical SEO evaluation
-- Content quality assessment
-- Link profile analysis
-- Mobile compatibility scoring
-- Performance metrics
-- Keyword density analysis
-- Readability scoring
+### Advanced Architecture
+- Distributed task processing with RabbitMQ
+- Containerized microservices with Docker
+- PostgreSQL for persistent storage
+- FastAPI for RESTful endpoints
+- Automated health monitoring
 
-### Optimization
-- Prioritized improvement recommendations
-- Implementation timeline
-- Expected impact projections
-- ROI estimates
+## Quick Start
 
-## Installation
-
-### Requirements
-- Python 3.10-3.13
-- Browserless.io API key
-- OpenAI API key
+### Prerequisites
 - Docker and Docker Compose
+- Browserless.io API key
+- OpenAI API key (GPT-4 recommended)
+- Python 3.10-3.13
 
-### Quick Start
-1. Clone the repository:
+### Installation
+
+1. Clone and setup:
 ```bash
 git clone <repository-url>
-cd SEO-Agent
+cd seo-analysis-agent
 ```
 
-2. Create a `.env` file in the root directory:
-```env
-OPENAI_API_KEY=your_openai_api_key
-BROWSERLESS_API_KEY=your_browserless_api_key
-RABBITMQ_USER=user
-RABBITMQ_PASS=password
-```
-
-3. Build and run with Docker Compose:
+2. Configure environment:
 ```bash
-docker-compose build
-docker-compose up
+cp .env.example .env
+# Edit .env with your API keys and settings
 ```
 
-This will start:
-- RabbitMQ on port 5672 (management interface on 15672)
-- Worker process(es)
-- Web service
-
-## Project Structure
-```
-SEO-Agent/
-├── src/
-│   ├── config/
-│   │   ├── agents.yaml    # Agent configurations
-│   │   └── tasks.yaml     # Task definitions
-│   ├── tools/             # Custom SEO analysis tools
-│   ├── crew.py           # Main crew implementation
-│   ├── main.py           # Entry point
-│   └── worker.py         # Worker implementation
-├── docker-compose.yml
-├── Dockerfile
-└── requirements.txt
-```
-
-## Monitoring
-
-### RabbitMQ Management Interface
-- Access at: http://localhost:15672
-- Default credentials: user/password
-
-### Worker Logs
+3. Launch services:
 ```bash
+docker-compose up -d
+```
+
+### API Endpoints
+
+- `POST /analyze`
+  ```json
+  {
+    "website_url": "https://example.com"
+  }
+  ```
+  Returns: `job_id` for tracking analysis progress
+
+- `GET /result/{job_id}`
+  Returns analysis results including:
+  - Technical metrics
+  - Content analysis
+  - Optimization recommendations
+
+- `GET /health`
+  System health check endpoint
+
+## Architecture Details
+
+### Components
+- **Web Service**: FastAPI application handling API requests
+- **Worker Pool**: Distributed analysis workers
+- **Message Queue**: RabbitMQ for task distribution
+- **Database**: PostgreSQL for results storage
+- **Analysis Tools**:
+  - BrowserlessScraper
+  - LoadingTimeTracker
+  - MobileOptimizationTool
+  - SubpageAnalyzer
+
+### Data Flow
+1. Client submits analysis request
+2. Request queued in RabbitMQ
+3. Available worker picks up task
+4. Multiple AI agents perform analysis
+5. Results stored in PostgreSQL
+6. Client retrieves formatted results
+
+## Monitoring & Management
+
+### RabbitMQ Dashboard
+- URL: http://localhost:15672
+- Credentials: user/password
+- Monitor queue status
+- Track worker performance
+
+### Logging
+```bash
+# View service logs
+docker-compose logs -f web
+
+# View worker logs
 docker-compose logs -f worker
 ```
 
-### BrowserlessScraper
-- Extracts meta tags, headings, links, and images
-- Analyzes content structure
-- Counts keywords and calculates density
-- Handles JavaScript-rendered content
-- Provides readability metrics
+### Scaling
+```bash
+# Scale up workers
+docker-compose up -d --scale worker=3
+```
 
-1. If services fail to start:
-   - Check if RabbitMQ is running
-   - Verify environment variables
-   - Ensure config files are in the correct location
+## Troubleshooting
 
-2. If analysis fails:
+### Common Issues
+1. Connection Errors
+   - Verify RabbitMQ is running
+   - Check network connectivity
+   - Validate API credentials
+
+2. Analysis Failures
    - Check worker logs
-   - Verify API keys
-   - Ensure website is accessible
+   - Verify target site accessibility
+   - Validate API rate limits
 
-3. If queue builds up:
-   - Scale up workers
-   - Check for worker errors
-   - Monitor RabbitMQ dashboard
+3. Performance Issues
+   - Monitor queue length
+   - Check resource usage
+   - Scale workers as needed
 
-## Output
+## Contributing
 
-The analysis generates a detailed report in PDF format containing:
+1. Fork the repository
+2. Create feature branch
+3. Commit changes
+4. Submit pull request
 
-1. Technical Analysis
-   - Meta tag inventory
-   - Content structure
-   - Link profile
-   - Performance metrics
+## License
 
-2. Content Analysis
-   - Keyword density
-   - Readability scores
-   - Content structure
+MIT License - See LICENSE file for details
 
 ## Acknowledgments
-
 - Built with [crewAI](https://github.com/joaomdmoura/crewAI)
-- Uses OpenAI's GPT-4 for analysis
-- Powered by [browserless.io](https://browserless.io) for web scraping
-- Queue system using [RabbitMQ](https://www.rabbitmq.com/)
+- Uses OpenAI's GPT-4
+- Powered by [browserless.io](https://browserless.io)
+- Queue system by [RabbitMQ](https://www.rabbitmq.com/)
+
+## API Documentation
+
+This service implements the Masumi Agentic Service API Standard (MIP-003).
+
+### Endpoints
+
+#### 1. Start Job
+- **URL**: `/start_job`
+- **Method**: `POST`
+- **Body**:
+```json
+{
+    "input_data": {
+        "website_url": "https://example.com",
+        "max_pages": 50,
+        "analysis_depth": "standard"
+    }
+}
+```
+- **Response**:
+```json
+{
+    "status": "success",
+    "job_id": "string",
+    "payment_id": "string"
+}
+```
+
+#### 2. Check Job Status
+- **URL**: `/status?job_id=<job_id>`
+- **Method**: `GET`
+- **Response**:
+```json
+{
+    "job_id": "string",
+    "status": "string",
+    "result": {
+        "recommendations": {
+            "priority_fixes": [],
+            "impact_forecast": {},
+            "key_statistics": {}
+        }
+    }
+}
+```
+
+#### 3. Check Availability
+- **URL**: `/availability`
+- **Method**: `GET`
+- **Response**:
+```json
+{
+    "status": "available",
+    "message": "Service is operational"
+}
+```
+
+#### 4. Get Input Schema
+- **URL**: `/input_schema`
+- **Method**: `GET`
+- **Response**: Returns the expected input format for the service

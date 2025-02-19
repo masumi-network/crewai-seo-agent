@@ -150,12 +150,10 @@ class LoadingTimeTracker(BaseTool):
         # Take multiple samples of load time measurements
         for _ in range(num_samples):
             try:
-                # Measure time for request to complete
                 start_time = time.time()
-                response = requests.get(url, timeout=30)
+                response = requests.get(url, timeout=10)  # 10 second timeout
                 end_time = time.time()
                 
-                # Only record successful requests
                 if response.status_code == 200:
                     load_time = end_time - start_time
                     load_times.append(load_time)
@@ -163,7 +161,7 @@ class LoadingTimeTracker(BaseTool):
             except (requests.RequestException, TimeoutError):
                 continue
                 
-            time.sleep(1)  # Brief pause between requests to avoid overwhelming server
+            time.sleep(0.5)  # Reduced pause between requests
             
         # Return null results if no measurements succeeded
         if not load_times:
