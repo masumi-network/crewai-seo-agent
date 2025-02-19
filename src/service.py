@@ -1,7 +1,3 @@
-import sys
-import os
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
 from fastapi import FastAPI, HTTPException, Response, BackgroundTasks
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
@@ -11,12 +7,15 @@ import json
 import threading
 import time
 import asyncio
-from db.database import Database
-from crew import SEOAnalyseCrew
 from datetime import datetime
 from typing import Optional
 from pika.exceptions import AMQPConnectionError
 import ssl
+import os
+
+# Update these imports to use relative imports since we're inside the src package
+from .db.database import Database
+from .crew import SEOAnalyseCrew
 
 # Set up logging
 logging.basicConfig(
