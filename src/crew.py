@@ -9,10 +9,10 @@ from dotenv import load_dotenv
 import openai
 import os
 import yaml
-from tools.LoadingTimeTracker import LoadingTimeTracker
-from tools.MobileTesting import MobileOptimizationTool
-from tools.SubpageAnalyzer import SubpageAnalyzer
-from tools.BrowserlessScraper import BrowserlessScraper
+from .tools.LoadingTimeTracker import LoadingTimeTracker
+from .tools.MobileTesting import MobileOptimizationTool
+from .tools.SubpageAnalyzer import SubpageAnalyzer
+from .tools.BrowserlessScraper import BrowserlessScraper
 import asyncio
 from typing import Dict, Any, List
 import logging
