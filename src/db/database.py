@@ -4,18 +4,34 @@ from psycopg2.extras import RealDictCursor
 from contextlib import contextmanager
 import json
 import logging
+from urllib.parse import urlparse
 
 logger = logging.getLogger(__name__)
 
 class Database:
     def __init__(self):
-        self.conn_params = {
-            'dbname': os.getenv('POSTGRES_DB', 'seo_analysis'),
-            'user': os.getenv('POSTGRES_USER', 'postgres'),
-            'password': os.getenv('POSTGRES_PASSWORD', 'postgres'),
-            'host': os.getenv('POSTGRES_HOST', 'postgres'),
-            'port': os.getenv('POSTGRES_PORT', '5432')
-        }
+        # Get Database URL from environment
+        database_url = os.getenv('DATABASE_URL')
+        
+        if database_url:
+            # Parse database URL
+            url = urlparse(database_url)
+            self.conn_params = {
+                'dbname': url.path[1:],
+                'user': url.username,
+                'password': url.password,
+                'host': url.hostname,
+                'port': url.port or '5432'
+            }
+        else:
+            # Fallback for local development
+            self.conn_params = {
+                'dbname': os.getenv('POSTGRES_DB', 'seo_analysis'),
+                'user': os.getenv('POSTGRES_USER', 'postgres'),
+                'password': os.getenv('POSTGRES_PASSWORD', 'postgres'),
+                'host': os.getenv('POSTGRES_HOST', 'postgres'),
+                'port': os.getenv('POSTGRES_PORT', '5432')
+            }
 
     @contextmanager
     def get_connection(self):

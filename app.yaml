@@ -1,0 +1,32 @@
+name: seo-analysis-service
+services:
+  - name: web
+    environment_slug: python
+    github:
+      branch: main
+      deploy_on_push: true
+      repo: your-username/your-repo-name
+    build_command: pip install -r requirements.txt
+    run_command: uvicorn src.service:app --host 0.0.0.0 --port $PORT
+    envs:
+      - key: PYTHONPATH
+        value: /app/src
+      - key: OPENAI_API_KEY
+        type: SECRET
+      - key: BROWSERLESS_API_KEY
+        type: SECRET
+      - key: DATABASE_URL
+        scope: RUN_TIME
+        value: ${db.DATABASE_URL}
+      - key: RABBITMQ_URL
+        type: SECRET
+        value: "amqps://ksyhjbub:bQAhnLLM-K3ITuRlryjjGaISEAu5F2Xj@rattlesnake.rmq.cloudamqp.com/ksyhjbub"
+    instance_count: 1
+    instance_size_slug: basic-xxs
+
+databases:
+  - engine: PG
+    name: seo-analysis-db
+    num_nodes: 1
+    size: db-s-dev-database
+    version: "12" 

@@ -16,6 +16,7 @@ from crew import SEOAnalyseCrew
 from datetime import datetime
 from typing import Optional
 from pika.exceptions import AMQPConnectionError
+import ssl
 
 # Set up logging
 logging.basicConfig(
@@ -35,16 +36,25 @@ class InputData(BaseModel):
 def get_rabbitmq_connection() -> Optional[pika.BlockingConnection]:
     """Create RabbitMQ connection with retry logic"""
     try:
-        credentials = pika.PlainCredentials(
-            os.getenv('RABBITMQ_USER', 'user'),
-            os.getenv('RABBITMQ_PASS', 'password')
-        )
-        parameters = pika.ConnectionParameters(
-            host=os.getenv('RABBITMQ_HOST', 'rabbitmq'),
-            credentials=credentials,
-            heartbeat=600,
-            blocked_connection_timeout=300
-        )
+        # Get RabbitMQ URL from environment
+        rabbitmq_url = os.getenv('RABBITMQ_URL')
+        
+        if rabbitmq_url:
+            # Use CloudAMQP URL directly
+            parameters = pika.URLParameters(rabbitmq_url)
+        else:
+            # Fallback for local development
+            credentials = pika.PlainCredentials(
+                os.getenv('RABBITMQ_USER', 'user'),
+                os.getenv('RABBITMQ_PASS', 'password')
+            )
+            parameters = pika.ConnectionParameters(
+                host=os.getenv('RABBITMQ_HOST', 'rabbitmq'),
+                credentials=credentials,
+                heartbeat=600,
+                blocked_connection_timeout=300
+            )
+            
         return pika.BlockingConnection(parameters)
     except Exception as e:
         logger.error(f"RabbitMQ connection error: {str(e)}")
@@ -283,6 +293,12 @@ def start_worker():
 @app.on_event("startup")
 async def startup_event():
     """Start worker thread on startup"""
+    if os.getenv('DYNO'):  # Check if running on cloud platform
+        # Configure SSL context for CloudAMQP
+        ssl_context = ssl.create_default_context()
+        ssl_context.check_hostname = False
+        ssl_context.verify_mode = ssl.CERT_NONE
+        
     worker_thread = threading.Thread(target=start_worker, daemon=True)
     worker_thread.start()
     logger.info("Worker thread started")
