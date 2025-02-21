@@ -1,3 +1,4 @@
+# src/db/database.py
 import os
 import psycopg2
 from psycopg2.extras import RealDictCursor
@@ -10,11 +11,9 @@ logger = logging.getLogger(__name__)
 
 class Database:
     def __init__(self):
-        # Get Database URL from environment
         database_url = os.getenv('DATABASE_URL')
         
         if database_url:
-            # Parse database URL
             url = urlparse(database_url)
             self.conn_params = {
                 'dbname': url.path[1:],
@@ -24,7 +23,6 @@ class Database:
                 'port': url.port or '5432'
             }
         else:
-            # Fallback for local development
             self.conn_params = {
                 'dbname': os.getenv('POSTGRES_DB', 'seo_analysis'),
                 'user': os.getenv('POSTGRES_USER', 'postgres'),
@@ -92,29 +90,39 @@ class Database:
                     """,
                     (status, error, job_id)
                 )
+            else:
+                cur.execute(
+                    "UPDATE jobs SET status = %s WHERE id = %s",
+                    (status, job_id)
+                )
 
     def store_results(self, job_id: int, results: dict):
         """Store analysis results in the database"""
         try:
             with self.get_cursor() as cur:
-                # Ensure recommendations is a JSON string
-                if isinstance(results.get('recommendations'), dict):
-                    results['recommendations'] = json.dumps(results['recommendations'])
-                
                 cur.execute("""
                     INSERT INTO results (
-                        job_id, recommendations
-                    ) VALUES (%s, %s)
+                        job_id, meta_tags, headings, keywords, links, images,
+                        content_stats, mobile_stats, performance_stats, recommendations
+                    ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 """, (
                     job_id,
-                    results.get('recommendations')
+                    json.dumps(results.get('meta_tags', {})),
+                    json.dumps(results.get('headings', {})),
+                    json.dumps(results.get('keywords', {})),
+                    json.dumps(results.get('links', {})),
+                    json.dumps(results.get('images', {})),
+                    json.dumps(results.get('content_stats', {})),
+                    json.dumps(results.get('mobile_stats', {})),
+                    json.dumps(results.get('performance_stats', {})),
+                    json.dumps(results.get('recommendations', {}))
                 ))
                 
-                # Update job status to completed
                 self.update_job_status(job_id, 'completed')
                 
         except Exception as e:
             logger.error(f"Error storing results for job {job_id}: {str(e)}")
+            self.update_job_status(job_id, 'error', str(e))
             raise
 
     def get_job_status(self, job_id):
@@ -131,4 +139,4 @@ class Database:
                 "SELECT * FROM results WHERE job_id = %s",
                 (job_id,)
             )
-            return cur.fetchone() 
+            return cur.fetchone()
