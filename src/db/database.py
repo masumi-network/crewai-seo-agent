@@ -63,7 +63,7 @@ class Database:
     def update_job_status(self, job_id, status, error=None):
         """Update job status with timestamp"""
         with self.get_cursor() as cur:
-            if status == 'started':
+            if status == 'started' or status == 'running':
                 cur.execute(
                     """
                     UPDATE jobs 

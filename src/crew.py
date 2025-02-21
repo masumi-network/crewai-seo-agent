@@ -198,20 +198,31 @@ class SEOAnalyseCrew():
                 meta_info["tags"][tag.strip("* ")] = int(count.split()[0])
         return meta_info
 
-    def _extract_keyword_info(self, text: str) -> Dict:
-        keyword_info = {"frequent_words": {}, "density": {}, "total_words": 0}
-        lines = text.split('\n')
-        for line in lines:
-            if "Total word count:" in line:
-                keyword_info["total_words"] = int(line.split(':')[1].strip())
-            elif "*" in line and ":" in line:
-                parts = line.split(':')
-                word = parts[0].strip("* ")
-                count_part = parts[1].strip()
-                count = int(count_part.split()[0])
+def _extract_keyword_info(self, text: str) -> Dict:
+    keyword_info = {"frequent_words": {}, "density": {}, "total_words": 0}
+    lines = text.split('\n')
+    for line in lines:
+        line = line.strip()
+        if "Total Words:" in line or "Total word count:" in line:
+            keyword_info["total_words"] = int(line.split(':', 1)[1].strip())
+        elif "*" in line and ":" in line:
+            parts = line.split(':', 1)
+            word = parts[0].strip("* ").strip()
+            count_part = parts[1].strip()
+            try:
+                # Extract count (e.g., "3" from "3 occurrences (8.33%)")
+                count_str = count_part.split()[0]
+                count = int(count_str)
                 keyword_info["frequent_words"][word] = count
-                # Placeholder for density calculation if needed
-        return keyword_info
+                # Extract density if present (e.g., "8.33" from "(8.33%)")
+                if '(' in count_part and '%' in count_part:
+                    density_str = count_part.split('(')[1].split('%')[0]
+                    density = float(density_str)
+                    keyword_info["density"][word] = density
+            except (ValueError, IndexError) as e:
+                logger.warning(f"Skipping malformed keyword line: {line} - {str(e)}")
+                continue
+    return keyword_info
 
     def _extract_heading_info(self, text: str) -> Dict:
         heading_info = {"h1": 0, "h2": 0, "h3": 0, "h4_h6": 0}

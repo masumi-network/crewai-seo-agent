@@ -56,26 +56,23 @@ def get_rabbitmq_connection() -> Optional[pika.BlockingConnection]:
         return None
 
 def process_message(ch, method, properties, body):
-    """Process message from RabbitMQ queue"""
     try:
         data = json.loads(body)
         job_id = data['job_id']
         website_url = data['website_url']
         
-        db.update_job_status(job_id, 'running')
+        db.update_job_status(job_id, 'started')  # Changed from 'running'
         
         crew = SEOAnalyseCrew(website_url)
         results = asyncio.run(crew.run())
         
         if results and "error" not in results:
-            db.store_results(job_id, results)
-            db.update_job_status(job_id, 'completed')
+            db.store_results(job_id, results)  # This calls update_job_status('completed')
         else:
             error_msg = results.get('error', 'No results returned') if results else 'Analysis failed'
             db.update_job_status(job_id, 'error', error_msg)
-            
-        ch.basic_ack(delivery_tag=method.delivery_tag)
         
+        ch.basic_ack(delivery_tag=method.delivery_tag)
     except Exception as e:
         logger.error(f"Error processing message: {str(e)}")
         if 'job_id' in locals():
